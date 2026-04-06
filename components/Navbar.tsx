@@ -1,13 +1,17 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
-import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
+import { useEffect, useState, useRef, useCallback } from 'react';
+import { motion, useScroll, useMotionValueEvent, AnimatePresence } from 'framer-motion';
 import { Search, User } from 'lucide-react';
 import TilakSymbol from './TilakSymbol';
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [activeLink, setActiveLink] = useState(0);
+  const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
+  const navContainerRef = useRef<HTMLDivElement>(null);
+  const linkRefs = useRef<(HTMLAnchorElement | null)[]>([]);
   const { scrollY } = useScroll();
 
   useMotionValueEvent(scrollY, 'change', (latest) => {
@@ -22,50 +26,121 @@ export default function Navbar() {
     { label: 'Contact', href: '#contact' },
   ];
 
+  // Update the liquid indicator position
+  const updateIndicator = useCallback((index: number) => {
+    const link = linkRefs.current[index];
+    const container = navContainerRef.current;
+    if (link && container) {
+      const linkRect = link.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      setIndicatorStyle({
+        left: linkRect.left - containerRect.left,
+        width: linkRect.width,
+      });
+    }
+  }, []);
+
+  // Track active section on scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      const sections = ['#', '#about', '#collection', '#blog', '#contact'];
+      const scrollPos = window.scrollY + 200;
+
+      for (let i = sections.length - 1; i >= 0; i--) {
+        if (sections[i] === '#') {
+          if (scrollPos < 400) {
+            setActiveLink(0);
+            updateIndicator(0);
+            break;
+          }
+          continue;
+        }
+        const el = document.querySelector(sections[i]);
+        if (el && (el as HTMLElement).offsetTop <= scrollPos) {
+          setActiveLink(i);
+          updateIndicator(i);
+          break;
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    // Initialize
+    setTimeout(() => updateIndicator(0), 100);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [updateIndicator]);
+
   return (
     <>
       <motion.nav
         className="fixed top-0 left-0 right-0 z-[90] transition-all duration-500"
         style={{
           background: isScrolled
-            ? 'rgba(6, 26, 20, 0.95)'
+            ? 'rgba(43, 12, 16, 0.92)'
             : 'transparent',
-          backdropFilter: isScrolled ? 'blur(20px)' : 'none',
+          backdropFilter: isScrolled ? 'blur(24px) saturate(1.2)' : 'none',
           borderBottom: isScrolled
-            ? '1px solid rgba(255, 255, 255, 0.05)'
+            ? '1px solid rgba(212, 175, 55, 0.08)'
             : '1px solid transparent',
         }}
       >
         <div className="max-w-[1400px] w-full mx-auto px-6 py-4 flex items-center justify-between">
           {/* Logo (Left) */}
-          <a href="#" data-hoverable className="flex items-center gap-3">
-            <TilakSymbol className="w-5 h-7 shrink-0" />
+          <a href="#" data-hoverable className="flex items-center gap-3 group">
+            <motion.div
+              whileHover={{ rotate: [0, -5, 5, 0] }}
+              transition={{ duration: 0.5 }}
+            >
+              <TilakSymbol className="w-5 h-7 shrink-0" />
+            </motion.div>
             <motion.div
               className="text-sm md:text-base tracking-[0.12em] gold-gradient-text uppercase"
               style={{ fontFamily: 'var(--font-display)', fontWeight: 600 }}
-              whileHover={{ scale: 1.03 }}
             >
               SWAMINARAYAN ORNAMENTS
             </motion.div>
           </a>
 
-          {/* Desktop Nav Links (Center) */}
-          <div className="hidden md:flex flex-1 justify-center items-center gap-8 lg:gap-10">
-            {navLinks.map((link) => (
+          {/* Desktop Nav Links (Center) — with liquid gold indicator */}
+          <div ref={navContainerRef} className="hidden md:flex flex-1 justify-center items-center gap-8 lg:gap-10 relative">
+            {navLinks.map((link, index) => (
               <a
                 key={link.label}
+                ref={(el) => { linkRefs.current[index] = el; }}
                 href={link.href}
                 data-hoverable
-                className="text-xs tracking-[0.1em] capitalize transition-colors duration-300 hover:text-gold"
+                className="text-xs tracking-[0.1em] capitalize transition-all duration-300 relative py-1"
                 style={{
                   fontFamily: 'var(--font-body)',
-                  fontWeight: 400,
-                  color: 'rgba(255, 255, 255, 0.8)',
+                  fontWeight: activeLink === index ? 500 : 400,
+                  color: activeLink === index ? '#D4AF37' : 'rgba(255, 255, 255, 0.65)',
                 }}
+                onMouseEnter={() => updateIndicator(index)}
+                onMouseLeave={() => updateIndicator(activeLink)}
+                onClick={() => { setActiveLink(index); updateIndicator(index); }}
               >
                 {link.label}
               </a>
             ))}
+            
+            {/* Liquid Gold Indicator */}
+            <motion.div
+              className="absolute bottom-0 h-[2px] pointer-events-none"
+              animate={{
+                left: indicatorStyle.left,
+                width: indicatorStyle.width,
+              }}
+              transition={{
+                type: 'spring',
+                stiffness: 350,
+                damping: 30,
+              }}
+              style={{
+                background: 'linear-gradient(90deg, transparent, #D4AF37, #FFD700, #D4AF37, transparent)',
+                boxShadow: '0 0 8px rgba(212, 175, 55, 0.5), 0 0 20px rgba(212, 175, 55, 0.2)',
+                borderRadius: '1px',
+              }}
+            />
           </div>
 
           {/* Icons (Right) */}
