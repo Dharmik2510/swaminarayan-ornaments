@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "swaminarayan-ornaments"
+  },
+  "targets": {
+    "swaminarayan-ornaments": {
+      "storage": {
+        "main": [
+          "swaminarayan-ornaments.firebasestorage.app"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

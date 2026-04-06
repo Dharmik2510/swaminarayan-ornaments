@@ -1,0 +1,9 @@
+{
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "storage": {
+    "target": "main",
+    "rules": "storage.rules"
+  }
+}

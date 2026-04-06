@@ -1,65 +1,123 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
+import { motion, AnimatePresence } from 'framer-motion';
+import type { Product } from '@/lib/data';
+import type { Category } from '@/lib/data';
+import { MessageCircle } from 'lucide-react';
+
+// Dynamic imports for client-only components
+const GoldRevealLoader = dynamic(() => import('@/components/GoldRevealLoader'), { ssr: false });
+const GoldCursor = dynamic(() => import('@/components/GoldCursor'), { ssr: false });
+const GoldDustParticles = dynamic(() => import('@/components/GoldDustParticles'), { ssr: false });
+const Navbar = dynamic(() => import('@/components/Navbar'), { ssr: false });
+const HeroSection = dynamic(() => import('@/components/HeroSection'), { ssr: false });
+const FeaturedCategories = dynamic(() => import('@/components/FeaturedCategories'), { ssr: false });
+const CollectionSection = dynamic(() => import('@/components/CollectionSection'), { ssr: false });
+const AboutSection = dynamic(() => import('@/components/AboutSection'), { ssr: false });
+const ProductDetailModal = dynamic(() => import('@/components/ProductDetailModal'), { ssr: false });
+const Footer = dynamic(() => import('@/components/Footer'), { ssr: false });
 
 export default function Home() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedCarat, setSelectedCarat] = useState<'all' | 92 | 84>('all');
+  const [selectedCategory, setSelectedCategory] = useState<Category>('All');
+
+  // Lock body scroll during loading
+  useEffect(() => {
+    if (isLoading) {
+      document.body.classList.add('no-scroll');
+    } else {
+      document.body.classList.remove('no-scroll');
+    }
+    return () => document.body.classList.remove('no-scroll');
+  }, [isLoading]);
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (selectedProduct) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [selectedProduct]);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <main className="relative">
+      {/* Gold Reveal Loader */}
+      <AnimatePresence>
+        {isLoading && (
+          <GoldRevealLoader onComplete={() => setIsLoading(false)} />
+        )}
+      </AnimatePresence>
+
+      {/* Custom Cursor */}
+      <GoldCursor />
+
+      {/* Gold dust particles overlay */}
+      <GoldDustParticles />
+
+      {/* Main content wrapper */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: isLoading ? 0 : 1 }}
+        transition={{ duration: 1, delay: 0.2 }}
+      >
+        {/* Navigation */}
+        <Navbar />
+
+        {/* Hero */}
+        <HeroSection />
+
+        {/* Featured Categories */}
+        <FeaturedCategories />
+
+        {/* Divider */}
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="h-[1px]" style={{ background: 'linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.15), transparent)' }} />
+        </div>
+
+        {/* Collection */}
+        <CollectionSection
+          selectedCarat={selectedCarat}
+          selectedCategory={selectedCategory}
+          onCaratChange={setSelectedCarat}
+          onCategoryChange={setSelectedCategory}
+          onSelectProduct={setSelectedProduct}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+
+        {/* Divider */}
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="h-[1px]" style={{ background: 'linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.15), transparent)' }} />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+
+        {/* About */}
+        <AboutSection />
+
+        {/* Footer */}
+        <Footer />
+      </motion.div>
+
+      {/* Floating Chat Button */}
+      <motion.button
+        className="fixed bottom-8 right-8 z-[90] w-14 h-14 rounded-full bg-[#D4AF37] flex items-center justify-center text-black shadow-gold hover:bg-[#FFD700] transition-colors"
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        style={{ cursor: 'none' }}
+        data-hoverable
+      >
+        <MessageCircle size={24} strokeWidth={1.5} />
+      </motion.button>
+
+      {/* Product Detail Modal */}
+      <ProductDetailModal
+        product={selectedProduct}
+        isOpen={!!selectedProduct}
+        onClose={() => setSelectedProduct(null)}
+      />
+    </main>
   );
 }
