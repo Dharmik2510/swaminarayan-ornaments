@@ -19,7 +19,7 @@ export default function AdminMediaPage() {
   const [selected, setSelected] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => { getMediaItems().then(setItems); }, []);
+  useEffect(() => { getMediaItems().then(setItems).catch(err => console.error('[AdminMedia] Failed to load:', err.message)); }, []);
 
   const processFiles = useCallback(async (files: FileList | null) => {
     if (!files || files.length === 0) return;

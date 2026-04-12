@@ -28,7 +28,9 @@ export default function AdminDashboard() {
       getProducts().then(setProducts),
       getCategories().then(setCategories),
       getActivityLogs(15).then(setLogs)
-    ]);
+    ]).catch(err => {
+      console.error('[AdminDashboard] Failed to load data:', err.message);
+    });
   }, []);
 
   const active   = products.filter(p => p.status === 'active').length;

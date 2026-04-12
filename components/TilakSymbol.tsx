@@ -24,6 +24,7 @@ export default function TilakSymbol({ className = "", glow = false }: { classNam
           src="/logo.jpg" 
           alt="Swaminarayan Tilak Symbol" 
           fill
+          priority
           className="object-contain"
           unoptimized
         />

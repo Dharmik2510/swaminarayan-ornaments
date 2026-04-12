@@ -8,12 +8,24 @@ const ACTIVITY_LOGS_COLLECTION = 'activityLogs';
 
 export async function getProducts(): Promise<Product[]> {
   const querySnapshot = await getDocs(collection(db, PRODUCTS_COLLECTION));
-  return querySnapshot.docs.map(d => d.data() as Product).sort((a,b) => a.order - b.order);
+  return querySnapshot.docs.map(d => {
+    const data = d.data() as Product;
+    if (data.images && Array.isArray(data.images)) {
+      data.images = data.images.filter(img => typeof img === 'string' && img.trim() !== '' && img !== '//');
+    }
+    return data;
+  }).sort((a,b) => a.order - b.order);
 }
 
 export async function getProduct(id: string): Promise<Product | undefined> {
   const docSnap = await getDoc(doc(db, PRODUCTS_COLLECTION, id));
-  if (docSnap.exists()) return docSnap.data() as Product;
+  if (docSnap.exists()) {
+    const data = docSnap.data() as Product;
+    if (data.images && Array.isArray(data.images)) {
+      data.images = data.images.filter(img => typeof img === 'string' && img.trim() !== '' && img !== '//');
+    }
+    return data;
+  }
   return undefined;
 }
 

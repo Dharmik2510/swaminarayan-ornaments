@@ -21,30 +21,39 @@ export default function AdminCategoriesPage() {
   const [showNew, setShowNew] = useState(false);
 
   const refresh = async () => {
-    const cats = await getCategories();
-    setCategories(cats);
-    const products = await getProducts();
-    const counts: Record<string, number> = {};
-    cats.forEach(c => {
-      counts[c.id] = products.filter(p => p.category === c.name).length;
-    });
-    setProductCounts(counts);
+    try {
+      const cats = await getCategories();
+      setCategories(cats);
+      const products = await getProducts();
+      const counts: Record<string, number> = {};
+      cats.forEach(c => {
+        counts[c.id] = products.filter(p => p.category === c.name).length;
+      });
+      setProductCounts(counts);
+    } catch (err) {
+      console.error('[AdminCategories] Failed to load:', (err as Error).message);
+    }
   };
 
   useEffect(() => { refresh(); }, []);
 
   // ── New category ──────────────────────────────────────────────────────────
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!newForm.name?.trim()) { toast('Category name is required.', 'error'); return; }
-    addCategory({
-      name: newForm.name.trim(),
-      slug: newForm.slug?.trim() || slugify(newForm.name.trim()),
-      description: newForm.description?.trim(),
-    });
-    toast(`Category "${newForm.name}" created.`, 'success');
-    setNewForm({ name: '', slug: '', description: '' });
-    setShowNew(false);
-    refresh();
+    try {
+      await addCategory({
+        name: newForm.name.trim(),
+        slug: newForm.slug?.trim() || slugify(newForm.name.trim()),
+        description: newForm.description?.trim(),
+      });
+      toast(`Category "${newForm.name}" created.`, 'success');
+      setNewForm({ name: '', slug: '', description: '' });
+      setShowNew(false);
+      await refresh();
+    } catch (err) {
+      console.error('Failed to add category:', err);
+      toast(`Failed to create category: ${(err as Error).message}`, 'error');
+    }
   };
 
   // ── Inline edit ───────────────────────────────────────────────────────────
@@ -53,16 +62,21 @@ export default function AdminCategoriesPage() {
     setEditForm({ name: cat.name, slug: cat.slug, description: cat.description });
   };
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (!editingId || !editForm.name?.trim()) { toast('Name required.', 'error'); return; }
-    updateCategory(editingId, {
-      name: editForm.name.trim(),
-      slug: editForm.slug?.trim() || slugify(editForm.name.trim()),
-      description: editForm.description?.trim(),
-    });
-    toast('Category updated.', 'success');
-    setEditingId(null);
-    refresh();
+    try {
+      await updateCategory(editingId, {
+        name: editForm.name.trim(),
+        slug: editForm.slug?.trim() || slugify(editForm.name.trim()),
+        description: editForm.description?.trim(),
+      });
+      toast('Category updated.', 'success');
+      setEditingId(null);
+      await refresh();
+    } catch (err) {
+      console.error('Failed to update category:', err);
+      toast(`Failed to update: ${(err as Error).message}`, 'error');
+    }
   };
 
   // ── Delete ────────────────────────────────────────────────────────────────
@@ -77,9 +91,14 @@ export default function AdminCategoriesPage() {
       variant: 'danger',
     });
     if (!ok) return;
-    deleteCategory(cat.id);
-    toast(`"${cat.name}" deleted.`, 'success');
-    refresh();
+    try {
+      await deleteCategory(cat.id);
+      toast(`"${cat.name}" deleted.`, 'success');
+      await refresh();
+    } catch (err) {
+      console.error('Failed to delete category:', err);
+      toast(`Failed to delete: ${(err as Error).message}`, 'error');
+    }
   };
 
   // ── Reorder ───────────────────────────────────────────────────────────────

@@ -1,190 +1,81 @@
 # Swaminarayan Ornaments — Admin Panel Guide
 
-## Accessing the Admin Panel
+This document outlines the usage steps and functionalities available to administrators of the **Swaminarayan Ornaments** digital platform. The admin panel empowers authorized users to manage the showroom's inventory, media, and taxonomy securely.
 
-Navigate to `/admin` in your browser.
+## 1. Accessing the Admin Panel
 
-**Default password:** `swaminarayan2024`
-
-Change this in `lib/store.ts` → `ADMIN_PASSWORD` constant before going live.
-
-All data is stored in Firebase Firestore and images in Firebase Storage.
+- **URL:** Navigate to `/admin` in your browser.
+- **Authentication:** The dashboard is protected via an authentication gate. Use the configured master password to log in.
+- **Security:** The admin panel is restricted. Ensure your `ADMIN_PASSWORD` environment variable (or relevant constant in `lib/store.ts` / your env file) is set securely for production.
 
 ---
 
-## Dashboard
+## 2. Dashboard Overview
 
-The first screen after login shows a live overview:
+Upon logging in, you are presented with a live overview of your catalog data drawn directly from **Firebase Firestore**.
 
-| Section | What it shows |
-|---|---|
-| Stats row | Total products · Active · Drafts · Featured |
-| Recent Products | Last 5 products added, with thumbnail and status |
-| Activity Log | Last 15 create / update / delete / duplicate events |
-| Categories | All categories with per-category product count |
-
-Click **Add Product** (top right) or **View all** links to navigate to sub-pages.
+- **Stats Row:** View a quick summary of total products, active products, drafts, and featured items.
+- **Recent Activity:** Review the latest items added or updated in your catalog.
+- **Category Summary:** See all available categories alongside the number of products within each.
+- **Quick Links:** Instantly navigate to core pages like "Add Product," "Media Library," and "Categories" using quick action buttons.
 
 ---
 
-## Products
+## 3. Product Management
 
-### Adding a product
+Administrators have full CRUD (Create, Read, Update, Delete) capabilities over the jewelry items showcased in the digital storefront. All data is saved to Firestore.
 
-1. Click **Add Product** from the dashboard or **New Product** from the Products page.
-2. Fill in the required fields (marked with \*):
-   - **Product Name** — used throughout the store.
-   - **Description** — describe materials, design, and occasion suitability.
-   - **Category** — pick from your configured categories.
-3. Optional fields:
-   - **Carat Purity** — 92 (22K) or 84 (18K).
-   - **Tags** — press Enter or comma after each tag. Tags help with search.
-   - **Images** — drag-and-drop or click to upload. Up to 8 images per product.
-   - **SEO Title / Description** — defaults to product name / description if left blank.
-4. Set **Status**:
-   - `Active` — visible in the storefront.
-   - `Draft` — hidden from the store; saved for later.
-   - `Archived` — permanently hidden.
-5. Toggle **Featured Product** to surface it in the featured collection.
-6. Click **Publish** to save as active, or **Save Draft** to save without publishing.
+### Adding a New Product
+1. From the Dashboard or Products page, click **Add Product**.
+2. **Details:** Fill out fundamental fields like Product Name, Description (material/design details), and select a Category.
+3. **Attributes:** Define specifics such as Carat Purity (e.g., 22K or 18K Gold) and search Tags.
+4. **Media Upload:** Upload up to 8 images. Images are processed and stored in **Firebase Storage**. You can drag and drop to reorder; the first image becomes the primary thumbnail.
+5. **SEO & Visibility:** Customize the SEO Title and Description. Choose a status:
+   - **Active:** Live on the showroom.
+   - **Draft:** Saved, but hidden from visitors.
+   - **Archived:** Hidden and retired.
+6. **Publishing:** Toggle the "Featured" flag if you want the item on the homepage, then hit **Publish** or **Save Draft**.
 
-### Editing a product
+### Editing an Existing Product
+- Click on any product row from the Products list to enter the editor.
+- Changes auto-save as drafts or you can explicitly update the live item.
+- Update tags, descriptions, and active status as needed.
 
-Click the edit icon (pencil) on any row in the Products list, or click a product name. Changes auto-save as a draft every 2 seconds while you type.
+### Duplicating & Deleting
+- **Duplicate:** Use the copy icon next to a product to clone it as a draft immediately. Useful when adding similar variations of jewelry.
+- **Delete:** Remove products permanently with the trash icon (requires confirmation).
 
-### Images
-
-- Drag images in the upload zone or click to browse.
-- Drag thumbnails to reorder — the first image is the **main** image shown in the store.
-- Click the star icon on a thumbnail to set it as the main image.
-- Images are automatically compressed to reduce storage size.
-
-### Searching and filtering
-
-The search box on the Products page filters by name, description, and tags in real time. Use the dropdowns to filter by **category** and **status**. Click column headers to sort.
-
-### Bulk actions
-
-1. Check the boxes next to one or more products (or use the header checkbox to select all on the page).
-2. Choose an action from the **Choose action** dropdown:
-   - Set Active / Draft / Archived
-   - Assign to a category
-   - Delete selected
-3. Click **Apply**.
-
-### Duplicating a product
-
-Click the copy icon on a product row. A duplicate is created instantly as a `draft`, ready for editing.
-
-### Deleting a product
-
-Click the trash icon. A confirmation dialog will appear before deletion.
+### Bulk Actions & Filtering
+- Use the central search bar on the Products page to filter by name or tags.
+- Select multiple products via checkboxes to apply bulk actions like status changes (Activate/Draft), category reassignment, or bulk deletion.
 
 ---
 
-## Categories
+## 4. Category Management
 
-Categories group your products. The storefront uses category names for filtering.
+Categories dictate the primary navigation for normal users visiting the site. 
 
-### Adding a category
-
-1. Click **New Category**.
-2. Enter a **Name** — the slug is generated automatically.
-3. Optionally edit the **Slug** (used in URLs) and add a **Description**.
-4. Click **Create**.
-
-### Editing a category
-
-Click the pencil icon on any category row. Edit inline and click **Save**.
-
-> Updating a category name does **not** automatically update products that reference the old name. Reassign products via bulk actions on the Products page if you rename a category.
-
-### Reordering categories
-
-Use the up/down arrows on the left side of each category row to change display order.
-
-### Deleting a category
-
-Click the trash icon. If the category has products, you will be warned — the products remain but will have no category assigned.
+### Functionalities:
+- **Create:** Click **New Category**, provide a name, and an optional description. The system typically generates a URL-safe slug automatically.
+- **Edit:** Update category names and descriptions inline.
+- **Reorder:** Change the frontend display order of categories so that your most important collections (e.g., Necklaces) appear first.
+- **Delete:** Remove obsolete categories. *Note: Products bound to deleted categories will remain in the database but will lose their category assignment.*
 
 ---
 
-## Media Library
+## 5. Media Library
 
-A central store for uploaded images, independent of products.
+A centralized repository for uploading and organizing imagery independent of the product creation workflow. 
 
-### Uploading images
-
-- Drag files into the drop zone, or click **Upload**.
-- Multiple files can be uploaded at once.
-- All images are compressed automatically.
-
-### Tagging images
-
-1. Click an image thumbnail to open the detail panel.
-2. Type a tag and press Enter (or click the tag icon).
-3. Click the × on any tag to remove it.
-
-Tags help you find images later when assigning them to products.
-
-### Deleting images
-
-Hover over a thumbnail and click the trash icon, or open the detail panel and delete from there.
-
-> Deleting from the Media Library does **not** remove the image from products that already use it.
+### Functionalities:
+- **Upload Center:** Drag and drop files to upload directly to Firebase Storage. The app automatically handles size compression where applicable.
+- **Image Tagging:** Click any image to add distinct tags, making it easier to search through the library later.
+- **Gallery Deletion:** Remove images no longer needed. *Note: Be cautious not to delete images currently assigned to active products.*
 
 ---
 
-## Security Notes
+## 6. Real-Time Cloud Integration
 
-- The admin panel uses Firebase Authentication for secure access.
-- The default password `swaminarayan2024` should be changed before deployment.
-- All data is stored client-side. For a shared/multi-device setup, migrate to a real database (Firebase, Supabase, etc.).
-
----
-
-## Keyboard & UX shortcuts
-
-| Action | How |
-|---|---|
-| Add tag (product form) | Type tag → press **Enter** or **,** |
-| Confirm modal default | **Enter** |
-| Dismiss modal | **Esc** or click overlay |
-| Navigate back | Browser back, or the ← button in the form header |
-
----
-
-## Data Model Reference
-
-```
-Product
-  id          string     Auto-generated
-  name        string     Required
-  description string     Required
-  carat       92 | 84    Gold purity
-  category    string     Must match a Category name
-  tags        string[]   Lowercase
-  images      string[]   Base64 data URLs, first = primary
-  featured    boolean    
-  status      active | draft | archived
-  seoTitle    string     Optional
-  seoDescription string  Optional
-  createdAt   string     ISO date
-  updatedAt   string     ISO date
-
-Category
-  id          string
-  name        string
-  slug        string     URL-safe version of name
-  description string     Optional
-  order       number     Display order
-
-MediaItem
-  id          string
-  name        string     Original filename
-  dataUrl     string     Compressed base64
-  size        number     Original file size (bytes)
-  type        string     MIME type
-  tags        string[]
-  uploadedAt  string     ISO date
-```
+This admin panel no longer uses mock or local local-storage data. 
+- **Database:** It is fully integrated with **Firebase Firestore**. Any change in the admin panel reflects asynchronously and seamlessly across the application.
+- **Storage:** Product photos are persisted in **Firebase Storage** with structured paths, ensuring fast delivery and scalability.
