@@ -46,7 +46,7 @@ export default function AdminDashboard() {
       {/* Page header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-[26px] text-white/90 font-light tracking-wide"
+          <h1 className="text-[26px] text-black/90 font-medium tracking-wide"
             style={{ fontFamily: 'var(--font-accent)' }}>
             Dashboard
           </h1>
@@ -78,19 +78,19 @@ export default function AdminDashboard() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.2 }}
-          className="lg:col-span-3 rounded-2xl overflow-hidden border"
+          className="lg:col-span-3 rounded-2xl overflow-hidden border shadow-sm"
           style={{ background: 'var(--a-surface)', borderColor: 'var(--a-border)' } as React.CSSProperties}
         >
-          <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.055]">
-            <h2 className="text-white/80 text-sm font-medium">Recent Products</h2>
+          <div className="flex items-center justify-between px-5 py-4 border-b border-black/10">
+            <h2 className="text-black/95 text-sm font-medium">Recent Products</h2>
             <Link href="/admin/products" className="text-[#D4AF37] text-xs hover:underline flex items-center gap-1">
               View all <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
 
-          <div className="divide-y divide-white/[0.04]">
+          <div className="divide-y divide-black/[0.04]">
             {recentProducts.length === 0 ? (
-              <div className="px-5 py-10 text-center text-white/30 text-sm">
+              <div className="px-5 py-10 text-center text-black/55 text-sm">
                 No products yet.{' '}
                 <Link href="/admin/products/new" className="text-[#D4AF37] hover:underline">
                   Add your first product
@@ -101,23 +101,23 @@ export default function AdminDashboard() {
                 <Link
                   key={p.id}
                   href={`/admin/products/${p.id}`}
-                  className="flex items-center gap-3 px-5 py-3 hover:bg-white/[0.02] transition-colors group"
+                  className="flex items-center gap-3 px-5 py-3 hover:bg-black/5 transition-colors group"
                 >
                   {/* Thumbnail */}
-                  <div className="w-10 h-10 rounded-lg bg-white/[0.05] border border-white/[0.06] overflow-hidden shrink-0">
+                  <div className="w-10 h-10 rounded-lg bg-black/5 border border-black/10 overflow-hidden shrink-0">
                     {p.images?.[0] ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover" />
                     ) : (
-                      <Package className="w-4 h-4 text-white/20 m-auto mt-3" />
+                      <Package className="w-4 h-4 text-black/20 m-auto mt-3" />
                     )}
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <p className="text-white/80 text-sm truncate group-hover:text-white transition-colors">
+                    <p className="text-black/95 text-sm truncate group-hover:text-black transition-colors">
                       {p.name}
                     </p>
-                    <p className="text-white/30 text-xs">{p.category}</p>
+                    <p className="text-black/55 text-xs">{p.category}</p>
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
@@ -134,29 +134,29 @@ export default function AdminDashboard() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.25 }}
-          className="lg:col-span-2 rounded-2xl overflow-hidden border"
+          className="lg:col-span-2 rounded-2xl overflow-hidden border shadow-sm"
           style={{ background: 'var(--a-surface)', borderColor: 'var(--a-border)' } as React.CSSProperties}
         >
-          <div className="px-5 py-4 border-b border-white/[0.055]">
-            <h2 className="text-white/80 text-sm font-medium">Activity Log</h2>
+          <div className="px-5 py-4 border-b border-black/10">
+            <h2 className="text-black/95 text-sm font-medium">Activity Log</h2>
           </div>
 
           <div className="px-5 py-3 space-y-3 max-h-[360px] overflow-y-auto">
             {logs.length === 0 ? (
-              <p className="text-white/30 text-sm py-6 text-center">No activity yet.</p>
+              <p className="text-black/55 text-sm py-6 text-center">No activity yet.</p>
             ) : (
               logs.map(log => (
                 <div key={log.id} className="flex gap-2.5">
-                  <div className="mt-1 w-1.5 h-1.5 rounded-full bg-white/20 shrink-0" />
+                  <div className="mt-1 w-1.5 h-1.5 rounded-full bg-black/20 shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-white/60 text-xs leading-snug">
+                    <p className="text-black/95 text-xs leading-snug">
                       <span className={`font-medium ${ACTION_COLORS[log.action]}`}>
                         {ACTION_LABELS[log.action]}
                       </span>
                       {' '}
-                      <span className="text-white/80">{log.entityName}</span>
+                      <span className="text-black/95">{log.entityName}</span>
                     </p>
-                    <p className="text-white/25 text-[10px] mt-0.5">{timeAgo(log.timestamp)}</p>
+                    <p className="text-black/90 text-[10px] mt-0.5">{timeAgo(log.timestamp)}</p>
                   </div>
                 </div>
               ))
@@ -170,11 +170,11 @@ export default function AdminDashboard() {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.3 }}
-        className="rounded-2xl overflow-hidden border"
+        className="rounded-2xl overflow-hidden border shadow-sm"
         style={{ background: 'var(--a-surface)', borderColor: 'var(--a-border)' } as React.CSSProperties}
       >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.055]">
-          <h2 className="text-white/80 text-sm font-medium">Categories</h2>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-black/10">
+          <h2 className="text-black/95 text-sm font-medium">Categories</h2>
           <Link href="/admin/categories" className="text-[#D4AF37] text-xs hover:underline flex items-center gap-1">
             Manage <ArrowRight className="w-3 h-3" />
           </Link>
@@ -186,11 +186,11 @@ export default function AdminDashboard() {
             return (
               <div
                 key={cat.id}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.07] text-sm"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/5 border border-black/10 text-sm"
               >
                 <Tag className="w-3 h-3 text-[#D4AF37]" />
-                <span className="text-white/70">{cat.name}</span>
-                <span className="text-white/30 text-xs">{count}</span>
+                <span className="text-black/90">{cat.name}</span>
+                <span className="text-black/55 text-xs">{count}</span>
               </div>
             );
           })}

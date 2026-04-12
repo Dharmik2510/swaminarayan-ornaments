@@ -59,21 +59,21 @@
 
 /* Admin background */
 .admin-bg {
-  background-color: #1A0709;
+  background-color: #FAF9F6;
 }
 
 /* Admin design tokens */
 .admin-bg {
-  --a-bg:        #1A0709;
-  --a-surface:   #230A0D;
-  --a-elevated:  #2B0C10;
-  --a-border:    rgba(255,255,255,0.055);
-  --a-border-gold: rgba(212,175,55,0.14);
-  --a-gold:      #D4AF37;
-  --a-gold-dim:  rgba(212,175,55,0.6);
-  --a-text:      rgba(255,255,255,0.82);
-  --a-muted:     rgba(255,255,255,0.38);
-  --a-faint:     rgba(255,255,255,0.15);
+  --a-bg:        #FAF9F6;
+  --a-surface:   #FFFFFF;
+  --a-elevated:  #F4E8DB;
+  --a-border:    rgba(0,0,0,0.08);
+  --a-border-gold: rgba(212,175,55,0.3);
+  --a-gold:      #B8860B;
+  --a-gold-dim:  rgba(184,134,11,0.4);
+  --a-text:      rgba(0,0,0,0.85);
+  --a-muted:     rgba(0,0,0,0.5);
+  --a-faint:     rgba(0,0,0,0.08);
 }
 
 /* Admin editorial font */

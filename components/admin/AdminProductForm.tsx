@@ -34,7 +34,7 @@ function Field({ label, children, hint }: { label: string; children: React.React
     <div className="space-y-1.5">
       <label className="block text-[10px] tracking-[0.18em] uppercase" style={{ color: 'var(--a-muted)' }}>{label}</label>
       {children}
-      {hint && <p className="text-[11px] leading-relaxed" style={{ color: 'var(--a-faint)' }}>{hint}</p>}
+      {hint && <p className="text-[11px] leading-relaxed text-black/50">{hint}</p>}
     </div>
   );
 }
@@ -53,13 +53,13 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 // ─── Input styles ─────────────────────────────────────────────────────────────
 const inputCls = `
-  w-full bg-white/[0.03] border rounded-xl px-4 py-2.5 text-white/85 text-sm
-  placeholder:text-white/18 outline-none focus:border-[rgba(212,175,55,0.3)]
-  focus:bg-white/[0.045] transition-all duration-200
+  w-full bg-black/[0.03] border rounded-xl px-4 py-2.5 text-black/85 text-sm
+  placeholder:text-black/18 outline-none focus:border-[rgba(212,175,55,0.3)]
+  focus:bg-black/[0.045] transition-all duration-200
   [border-color:var(--a-border)]
 `;
 const selectCls = `
-  w-full border rounded-xl px-4 py-2.5 text-white/65 text-sm
+  w-full border rounded-xl px-4 py-2.5 text-black/65 text-sm
   outline-none focus:border-[rgba(212,175,55,0.3)] transition-all duration-200
   [background:var(--a-surface)] [border-color:var(--a-border)]
 `;
@@ -160,12 +160,12 @@ export default function AdminProductForm({ product }: Props) {
           <button
             type="button"
             onClick={() => router.push('/admin/products')}
-            className="p-2 rounded-xl border border-white/[0.08] text-white/40 hover:text-white hover:border-white/20 transition-colors"
+            className="p-2 rounded-xl border shadow-sm border-black/[0.08] text-black/95 hover:text-black hover:border-black/20 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div>
-            <h1 className="text-[26px] text-white/90 font-light tracking-wide"
+            <h1 className="text-[26px] text-black/90 font-medium tracking-wide"
               style={{ fontFamily: 'var(--font-accent)' }}>
               {isEditing ? 'Edit Product' : 'New Product'}
             </h1>
@@ -188,7 +188,7 @@ export default function AdminProductForm({ product }: Props) {
             type="button"
             onClick={(e) => handleSubmit(e as unknown as React.FormEvent, 'draft')}
             disabled={saving}
-            className="px-4 py-2.5 rounded-xl border border-white/[0.1] text-white/60 hover:text-white text-sm transition-colors"
+            className="px-4 py-2.5 rounded-xl border shadow-sm border-black/[0.1] text-black/95 hover:text-black text-sm transition-colors"
           >
             Save Draft
           </button>
@@ -274,7 +274,7 @@ export default function AdminProductForm({ product }: Props) {
                     type="button"
                     onClick={addTag}
                     disabled={!tagInput.trim()}
-                    className="px-4 py-2.5 rounded-xl border border-white/[0.1] text-white/60 hover:text-white text-sm disabled:opacity-40 transition-colors whitespace-nowrap"
+                    className="px-4 py-2.5 rounded-xl border shadow-sm border-black/[0.1] text-black/95 hover:text-black text-sm disabled:opacity-40 transition-colors whitespace-nowrap"
                   >
                     Add
                   </button>
@@ -282,9 +282,9 @@ export default function AdminProductForm({ product }: Props) {
                 {form.tags.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {form.tags.map(tag => (
-                      <span key={tag} className="flex items-center gap-1.5 px-3 py-1 bg-white/[0.06] border border-white/[0.08] rounded-full text-white/70 text-xs">
+                      <span key={tag} className="flex items-center gap-1.5 px-3 py-1 bg-black/[0.06] border border-black/[0.08] rounded-full text-black/90 text-xs">
                         {tag}
-                        <button type="button" onClick={() => removeTag(tag)} className="text-white/30 hover:text-white transition-colors">
+                        <button type="button" onClick={() => removeTag(tag)} className="text-black/55 hover:text-black transition-colors">
                           <X className="w-2.5 h-2.5" />
                         </button>
                       </span>
@@ -345,18 +345,18 @@ export default function AdminProductForm({ product }: Props) {
               <div
                 onClick={() => set('featured', !form.featured)}
                 className={`relative w-10 h-5 rounded-full transition-colors duration-200 ${
-                  form.featured ? 'bg-[#D4AF37]' : 'bg-white/[0.1]'
+                  form.featured ? 'bg-[#D4AF37]' : 'bg-black/[0.1]'
                 }`}
               >
                 <div
-                  className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform duration-200 ${
+                  className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-black transition-transform duration-200 ${
                     form.featured ? 'translate-x-5' : 'translate-x-0'
                   }`}
                 />
               </div>
               <div>
-                <p className="text-white/70 text-sm">Featured Product</p>
-                <p className="text-white/30 text-xs">Shown in featured collection</p>
+                <p className="text-black/90 text-sm">Featured Product</p>
+                <p className="text-black/55 text-xs">Shown in featured collection</p>
               </div>
             </label>
           </Section>
@@ -365,29 +365,29 @@ export default function AdminProductForm({ product }: Props) {
             <div className="space-y-2 text-sm">
               {product?.id && (
                 <div className="flex justify-between">
-                  <span className="text-white/30">ID</span>
-                  <span className="text-white/50 font-mono text-xs">{product.id}</span>
+                  <span className="text-black/55">ID</span>
+                  <span className="text-black/90 font-mono text-xs">{product.id}</span>
                 </div>
               )}
               {product?.createdAt && (
                 <div className="flex justify-between">
-                  <span className="text-white/30">Created</span>
-                  <span className="text-white/50">{product.createdAt}</span>
+                  <span className="text-black/55">Created</span>
+                  <span className="text-black/90">{product.createdAt}</span>
                 </div>
               )}
               {product?.updatedAt && (
                 <div className="flex justify-between">
-                  <span className="text-white/30">Updated</span>
-                  <span className="text-white/50">{product.updatedAt}</span>
+                  <span className="text-black/55">Updated</span>
+                  <span className="text-black/90">{product.updatedAt}</span>
                 </div>
               )}
               <div className="flex justify-between">
-                <span className="text-white/30">Images</span>
-                <span className="text-white/50">{form.images.length}</span>
+                <span className="text-black/55">Images</span>
+                <span className="text-black/90">{form.images.length}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-white/30">Tags</span>
-                <span className="text-white/50">{form.tags.length}</span>
+                <span className="text-black/55">Tags</span>
+                <span className="text-black/90">{form.tags.length}</span>
               </div>
             </div>
           </Section>

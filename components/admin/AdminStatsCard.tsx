@@ -25,7 +25,7 @@ export default function AdminStatsCard({ label, value, icon: Icon, color = 'gold
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay, ease: [0.16, 1, 0.3, 1] }}
-      className="rounded-xl border p-5"
+      className="rounded-xl border shadow-sm p-5"
       style={{ background: 'var(--a-surface)', borderColor: 'var(--a-border)' }}
     >
       <div className="flex items-start justify-between gap-3">
@@ -35,7 +35,7 @@ export default function AdminStatsCard({ label, value, icon: Icon, color = 'gold
             {label}
           </p>
           <p
-            className="text-[32px] leading-none text-white/90 font-light"
+            className="text-[32px] leading-none text-black/90 font-medium"
             style={{ fontFamily: 'var(--font-accent)' }}
           >
             {value}

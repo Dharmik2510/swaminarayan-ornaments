@@ -33,10 +33,10 @@ export default function AdminToast() {
               {/* Colored left bar */}
               <span className={`absolute left-0 inset-y-0 w-[3px] rounded-r-full ${bar}`} />
               <Icon className={`w-4 h-4 mt-0.5 shrink-0 ${accent}`} />
-              <p className="text-white/80 text-sm flex-1 leading-snug">{t.message}</p>
+              <p className="text-black/95 text-sm flex-1 leading-snug">{t.message}</p>
               <button
                 onClick={() => dismissToast(t.id)}
-                className="text-white/20 hover:text-white/60 transition-colors shrink-0 mt-0.5"
+                className="text-black/20 hover:text-black/95 transition-colors shrink-0 mt-0.5"
               >
                 <X className="w-3.5 h-3.5" />
               </button>

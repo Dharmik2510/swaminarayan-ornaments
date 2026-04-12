@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { href: '/admin/products',   label: 'Products',   icon: Package },
   { href: '/admin/categories', label: 'Categories', icon: Tag },
   { href: '/admin/media',      label: 'Media',      icon: ImageIcon },
+  { href: '/admin/guide',      label: 'Guide',      icon: ExternalLink },
 ];
 
 function NavLink({ item, onClick }: { item: typeof NAV_ITEMS[0]; onClick?: () => void }) {
@@ -30,13 +31,13 @@ function NavLink({ item, onClick }: { item: typeof NAV_ITEMS[0]; onClick?: () =>
         transition-all duration-200 group
         ${isActive
           ? 'text-[#D4AF37] bg-[rgba(212,175,55,0.07)]'
-          : 'text-white/40 hover:text-white/75 hover:bg-white/[0.03]'}
+          : 'text-black/95 hover:text-black/90 hover:bg-black/[0.03]'}
       `}
     >
       {isActive && (
         <span className="absolute left-0 inset-y-2 w-[2px] rounded-r-full bg-[#D4AF37] opacity-80" />
       )}
-      <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[#D4AF37]' : 'text-white/25 group-hover:text-white/50'}`} />
+      <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[#D4AF37]' : 'text-black/90 group-hover:text-black/90'}`} />
       <span className="tracking-[0.03em]">{item.label}</span>
     </Link>
   );
@@ -48,24 +49,24 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
     <div className="flex flex-col h-full">
       {/* Wordmark */}
       <div className="px-5 pt-7 pb-6 relative flex items-start gap-4">
-        <TilakSymbol className="w-6 h-8 shrink-0 mt-1" />
+        <TilakSymbol className="w-6 h-8 shrink-0 mt-1" lightMode={true} />
         <div>
           {onClose && (
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 p-1.5 rounded-lg text-white/25 hover:text-white/60 transition-colors lg:hidden"
+              className="absolute top-4 right-4 p-1.5 rounded-lg text-black/90 hover:text-black/95 transition-colors lg:hidden"
             >
               <X className="w-4 h-4" />
             </button>
           )}
           <p
-            className="text-[14px] tracking-[0.2em] text-white/75 font-light uppercase leading-none"
+            className="text-[14px] tracking-[0.2em] text-black/90 font-medium uppercase leading-none"
             style={{ fontFamily: 'var(--font-accent)' }}
           >
             Swaminarayan
           </p>
           <p
-            className="text-[10px] tracking-[0.28em] font-light uppercase mt-1"
+            className="text-[10px] tracking-[0.28em] font-medium uppercase mt-1"
             style={{ fontFamily: 'var(--font-accent)', color: 'var(--a-gold)' }}
           >
             Ornaments
@@ -76,8 +77,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
 
       {/* Nav */}
       <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto">
-        <p className="px-4 pb-2 text-[9px] tracking-[0.25em] uppercase"
-          style={{ color: 'var(--a-faint)' }}>Menu</p>
+        <p className="px-4 pb-2 text-[9px] tracking-[0.25em] uppercase text-black/50 font-bold">Menu</p>
         {NAV_ITEMS.map(item => <NavLink key={item.href} item={item} onClick={onClose} />)}
       </nav>
 
@@ -86,14 +86,14 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
         <Link
           href="/"
           target="_blank"
-          className="flex items-center gap-3 px-4 py-2.5 text-[13px] rounded-lg text-white/30 hover:text-white/60 hover:bg-white/[0.03] transition-all duration-200 group"
+          className="flex items-center gap-3 px-4 py-2.5 text-[13px] rounded-lg text-black/55 hover:text-black/95 hover:bg-black/[0.03] transition-all duration-200 group"
         >
-          <ExternalLink className="w-3.5 h-3.5 shrink-0 group-hover:text-white/50" />
+          <ExternalLink className="w-3.5 h-3.5 shrink-0 group-hover:text-black/90" />
           View Storefront
         </Link>
         <button
           onClick={logout}
-          className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] rounded-lg text-white/30 hover:text-red-400/80 hover:bg-red-400/[0.05] transition-all duration-200 group"
+          className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] rounded-lg text-black/55 hover:text-red-400/80 hover:bg-red-400/[0.05] transition-all duration-200 group"
         >
           <LogOut className="w-3.5 h-3.5 shrink-0 group-hover:text-red-400/80" />
           Sign Out

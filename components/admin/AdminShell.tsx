@@ -37,29 +37,29 @@ function LoginScreen() {
       >
         {/* Wordmark */}
         <div className="text-center mb-10 flex flex-col items-center">
-          <TilakSymbol className="w-8 h-10 mb-5" />
+          <TilakSymbol className="w-8 h-10 mb-5" lightMode={true} />
           <p
-            className="text-[22px] tracking-[0.22em] text-white/85 font-light uppercase"
+            className="text-[22px] tracking-[0.22em] text-black/85 font-medium uppercase"
             style={{ fontFamily: 'var(--font-accent)' }}
           >
             Swaminarayan
           </p>
           <p
-            className="text-[13px] tracking-[0.32em] text-[#D4AF37] font-light uppercase mt-1"
+            className="text-[13px] tracking-[0.32em] text-[#D4AF37] font-medium uppercase mt-1"
             style={{ fontFamily: 'var(--font-accent)' }}
           >
             Ornaments
           </p>
           <div className="flex items-center gap-3 mt-5">
-            <span className="flex-1 h-px bg-white/[0.07]" />
-            <span className="text-[9px] tracking-[0.3em] text-white/25 uppercase">Administration</span>
-            <span className="flex-1 h-px bg-white/[0.07]" />
+            <span className="flex-1 h-px bg-black/[0.07]" />
+            <span className="text-[9px] tracking-[0.3em] text-black/90 uppercase">Administration</span>
+            <span className="flex-1 h-px bg-black/[0.07]" />
           </div>
         </div>
 
         {/* Card */}
         <div
-          className="rounded-xl border p-7"
+          className="rounded-xl border shadow-sm p-7"
           style={{ background: 'var(--a-surface)', borderColor: 'var(--a-border)' }}
         >
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -75,11 +75,11 @@ function LoginScreen() {
                 placeholder="Enter admin email"
                 autoFocus
                 className={`
-                  w-full rounded-lg px-3.5 py-2.5 text-sm text-white/85 outline-none
-                  transition-all duration-200 placeholder:text-white/20
+                  w-full rounded-lg px-3.5 py-2.5 text-sm text-black/85 outline-none
+                  transition-all duration-200 placeholder:text-black/20
                   ${error
                     ? 'border border-red-500/40 bg-red-950/20 focus:border-red-500/60'
-                    : 'border bg-white/[0.03] focus:bg-white/[0.05] focus:border-[rgba(212,175,55,0.35)]'}
+                    : 'border bg-black/[0.03] focus:bg-black/5 focus:border-[rgba(212,175,55,0.35)]'}
                 `}
                 style={error ? {} : { borderColor: 'var(--a-border)' }}
               />
@@ -95,11 +95,11 @@ function LoginScreen() {
                 onChange={(e) => { setPassword(e.target.value); setError(false); }}
                 placeholder="Enter password"
                 className={`
-                  w-full rounded-lg px-3.5 py-2.5 text-sm text-white/85 outline-none
-                  transition-all duration-200 placeholder:text-white/20
+                  w-full rounded-lg px-3.5 py-2.5 text-sm text-black/85 outline-none
+                  transition-all duration-200 placeholder:text-black/20
                   ${error
                     ? 'border border-red-500/40 bg-red-950/20 focus:border-red-500/60'
-                    : 'border bg-white/[0.03] focus:bg-white/[0.05] focus:border-[rgba(212,175,55,0.35)]'}
+                    : 'border bg-black/[0.03] focus:bg-black/5 focus:border-[rgba(212,175,55,0.35)]'}
                 `}
                 style={error ? {} : { borderColor: 'var(--a-border)' }}
               />
@@ -142,7 +142,7 @@ function InnerShell({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   if (loadingAuth) {
-    return <div className="min-h-screen admin-bg flex items-center justify-center p-6 text-white text-sm">Loading admin panel...</div>;
+    return <div className="min-h-screen admin-bg flex items-center justify-center p-6 text-black text-sm">Loading admin panel...</div>;
   }
 
   if (!isAuthenticated) {
@@ -167,9 +167,9 @@ function InnerShell({ children }: { children: ReactNode }) {
             <Menu className="w-5 h-5" />
           </button>
           <div className="flex items-center gap-2">
-            <TilakSymbol className="w-4 h-6" />
+            <TilakSymbol className="w-4 h-6" lightMode={true} />
             <span
-              className="text-[#D4AF37] text-sm tracking-[0.15em] uppercase font-light"
+              className="text-[#D4AF37] text-sm tracking-[0.15em] uppercase font-medium"
               style={{ fontFamily: 'var(--font-accent)' }}
             >
               Swaminarayan
