@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Save, ArrowLeft, Loader2, X } from 'lucide-react';
+import { Save, ArrowLeft, Loader2, X, Sparkles } from 'lucide-react';
 import AdminImageUpload from './AdminImageUpload';
 import { useAdmin } from './AdminContext';
 import { addProduct, updateProduct } from '@/lib/firebase';
@@ -74,6 +74,7 @@ export default function AdminProductForm({ product }: Props) {
   const [saving, setSaving] = useState(false);
   const [tagInput, setTagInput] = useState('');
   const [autoSaveMsg, setAutoSaveMsg] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [form, setForm] = useState<FormData>({
@@ -128,6 +129,41 @@ export default function AdminProductForm({ product }: Props) {
   };
 
   const removeTag = (tag: string) => set('tags', form.tags.filter(t => t !== tag));
+
+  const generateWithAI = async () => {
+    if (!form.images[0]) {
+      toast('Upload an image first.', 'error');
+      return;
+    }
+    setAiLoading(true);
+    try {
+      const res = await fetch('/api/ai/generate-product', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          imageUrl: form.images[0],
+          categories: categoryNames,
+          carat: form.carat,
+        }),
+      });
+      if (!res.ok) throw new Error('AI request failed');
+      const g = await res.json();
+      setForm(f => ({
+        ...f,
+        name: f.name || g.name || '',
+        description: f.description || g.description || '',
+        category: f.category || g.category || '',
+        tags: f.tags.length ? f.tags : (g.tags ?? []),
+        seoTitle: f.seoTitle || g.seoTitle || '',
+        seoDescription: f.seoDescription || g.seoDescription || '',
+      }));
+      toast('AI draft ready. Review before saving.', 'success');
+    } catch {
+      toast('AI generation failed.', 'error');
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent, status?: ProductStatus) => {
     e.preventDefault();
@@ -184,6 +220,16 @@ export default function AdminProductForm({ product }: Props) {
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={generateWithAI}
+            disabled={aiLoading || form.images.length === 0}
+            title={form.images.length === 0 ? 'Upload an image to enable' : 'Generate name, description, tags & SEO from the first image'}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#D4AF37]/40 bg-[#D4AF37]/10 text-black/90 hover:bg-[#D4AF37]/20 text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {aiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+            {aiLoading ? 'Generating…' : 'Generate with AI'}
+          </button>
           <button
             type="button"
             onClick={(e) => handleSubmit(e as unknown as React.FormEvent, 'draft')}
