@@ -2,7 +2,9 @@
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { motion, useScroll, useMotionValueEvent, AnimatePresence } from 'framer-motion';
-import { Search, User } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { Search } from 'lucide-react';
 import TilakSymbol from './TilakSymbol';
 
 export default function Navbar() {
@@ -18,13 +20,29 @@ export default function Navbar() {
     setIsScrolled(latest > 50);
   });
 
+  const pathname = usePathname();
+
   const navLinks = [
-    { label: 'Home', href: '#' },
-    { label: 'About', href: '#about' },
-    { label: 'Collection', href: '#collection' },
-    { label: 'Blog', href: '#blog' },
-    { label: 'Contact', href: '#contact' },
+    { label: 'Home', href: '/', isRoute: true },
+    { label: 'About', href: '/#about', isRoute: false },
+    { label: 'Collection', href: '/collection', isRoute: true },
+    { label: 'Contact', href: '/#contact', isRoute: false },
   ];
+
+  const handleHashClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    const hash = href.replace('/', '');
+    if (pathname === '/') {
+      // Already on home page — smooth scroll to section
+      e.preventDefault();
+      if (hash === '' || hash === '#') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        const el = document.querySelector(hash);
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+    // If on another page, let the Link navigate to /#section naturally
+  };
 
   // Update the liquid indicator position
   const updateIndicator = useCallback((index: number) => {
@@ -43,7 +61,7 @@ export default function Navbar() {
   // Track active section on scroll
   useEffect(() => {
     const handleScroll = () => {
-      const sections = ['#', '#about', '#collection', '#blog', '#contact'];
+      const sections = ['#', '#about', '#collection', '#contact'];
       const scrollPos = window.scrollY + 200;
 
       for (let i = sections.length - 1; i >= 0; i--) {
@@ -86,7 +104,7 @@ export default function Navbar() {
       >
         <div className="max-w-[1400px] w-full mx-auto px-6 py-4 flex items-center justify-between">
           {/* Logo (Left) */}
-          <a href="#" data-hoverable className="flex items-center gap-3 group">
+          <Link href="/" data-hoverable className="flex items-center gap-3 group">
             <motion.div
               whileHover={{ rotate: [0, -5, 5, 0] }}
               transition={{ duration: 0.5 }}
@@ -99,12 +117,12 @@ export default function Navbar() {
             >
               SWAMINARAYAN ORNAMENTS
             </motion.div>
-          </a>
+          </Link>
 
           {/* Desktop Nav Links (Center) — with liquid gold indicator */}
           <div ref={navContainerRef} className="hidden md:flex flex-1 justify-center items-center gap-8 lg:gap-10 relative">
             {navLinks.map((link, index) => (
-              <a
+              <Link
                 key={link.label}
                 ref={(el) => { linkRefs.current[index] = el; }}
                 href={link.href}
@@ -117,10 +135,14 @@ export default function Navbar() {
                 }}
                 onMouseEnter={() => updateIndicator(index)}
                 onMouseLeave={() => updateIndicator(activeLink)}
-                onClick={() => { setActiveLink(index); updateIndicator(index); }}
+                onClick={(e) => {
+                  setActiveLink(index);
+                  updateIndicator(index);
+                  if (!link.isRoute) handleHashClick(e, link.href);
+                }}
               >
                 {link.label}
-              </a>
+              </Link>
             ))}
             
             {/* Liquid Gold Indicator */}
@@ -147,9 +169,6 @@ export default function Navbar() {
           <div className="hidden md:flex items-center justify-end gap-6 w-48">
             <button data-hoverable className="text-white hover:text-gold transition-colors">
               <Search size={18} strokeWidth={1.5} />
-            </button>
-            <button data-hoverable className="text-white hover:text-gold transition-colors">
-              <User size={18} strokeWidth={1.5} />
             </button>
           </div>
 
@@ -200,25 +219,31 @@ export default function Navbar() {
       >
         <div className="flex flex-col items-center justify-center h-full gap-8">
           {navLinks.map((link, index) => (
-            <motion.a
+            <motion.div
               key={link.label}
-              href={link.href}
-              data-hoverable
-              className="text-2xl tracking-[0.2em] uppercase"
-              style={{
-                fontFamily: 'var(--font-display)',
-                color: 'rgba(245, 240, 232, 0.7)',
-              }}
               initial={{ opacity: 0, y: 30 }}
               animate={{
                 opacity: isMobileMenuOpen ? 1 : 0,
                 y: isMobileMenuOpen ? 0 : 30,
               }}
               transition={{ delay: index * 0.1 + 0.2, duration: 0.5 }}
-              onClick={() => setIsMobileMenuOpen(false)}
             >
-              {link.label}
-            </motion.a>
+              <Link
+                href={link.href}
+                data-hoverable
+                className="text-2xl tracking-[0.2em] uppercase block"
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  color: 'rgba(245, 240, 232, 0.7)',
+                }}
+                onClick={(e) => {
+                  setIsMobileMenuOpen(false);
+                  if (!link.isRoute) handleHashClick(e, link.href);
+                }}
+              >
+                {link.label}
+              </Link>
+            </motion.div>
           ))}
         </div>
       </motion.div>
