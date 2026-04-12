@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Search, Trash2, Edit2, Copy, Package,
   ChevronDown, ChevronUp, ChevronsUpDown, Check,
-  LayoutGrid, List,
+  LayoutGrid, List, Sparkles,
 } from 'lucide-react';
 import StatusBadge from '@/components/admin/StatusBadge';
 import {
@@ -199,13 +199,22 @@ export default function AdminProductsPage() {
             {filtered.length} total
           </p>
         </div>
-        <Link
-          href="/admin/products/new"
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#D4AF37] text-black text-sm font-semibold hover:bg-[#FFD700] transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Add Product
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/admin/products/bulk"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#D4AF37]/40 bg-[#D4AF37]/10 text-black/90 hover:bg-[#D4AF37]/20 text-sm transition-colors"
+          >
+            <Sparkles className="w-4 h-4" />
+            Bulk Add
+          </Link>
+          <Link
+            href="/admin/products/new"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#D4AF37] text-black text-sm font-semibold hover:bg-[#FFD700] transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Add Product
+          </Link>
+        </div>
       </div>
 
       {/* Toolbar */}
