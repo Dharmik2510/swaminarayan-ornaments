@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect, useRef } from 'react';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import Image from 'next/image';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { defaultCategories, mockProducts } from '@/lib/data';
 import type { Product } from '@/lib/data';
 
-// Timeout wrapper — Firestore hangs when the DB isn't provisioned
+// Timeout wrapper
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return Promise.race([
     promise,
@@ -18,12 +18,12 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
 }
 
 const categoryDescriptions: Record<string, string> = {
-  Necklaces: 'Regal statement pieces',
-  Bangles: 'Crafted circles of elegance',
-  Earrings: 'Drops of liquid gold',
-  Rings: 'Symbols of eternal bond',
+  Necklaces: 'Regal statement pieces that command attention',
+  Bangles: 'Crafted circles of timeless elegance',
+  Earrings: 'Drops of liquid gold artistry',
+  Rings: 'Symbols of an eternal bond',
   Chains: 'Links of timeless grace',
-  Bracelets: 'Wrist-adorning artistry',
+  Bracelets: 'Wrist-adorning masterpieces',
   Pendants: 'Charms of divine beauty',
   Mangalsutra: 'Sacred threads of togetherness',
 };
@@ -63,12 +63,22 @@ function buildCategoryDisplay(
       };
     })
     .sort((a, b) => b.productCount - a.productCount)
-    .slice(0, 3);
+    .slice(0, 5);
 }
 
 export default function FeaturedCategories() {
   const [categoryData, setCategoryData] = useState<CategoryDisplay[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLDivElement>(null);
+
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start end', 'end start'],
+  });
+
+  const sectionOpacity = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [0, 1, 1, 0]);
 
   useEffect(() => {
     async function load() {
@@ -82,7 +92,6 @@ export default function FeaturedCategories() {
         const resolvedProducts = products.length > 0 ? products : mockProducts;
         setCategoryData(buildCategoryDisplay(resolvedCats, resolvedProducts));
       } catch {
-        // Firestore not provisioned or timed out — use local mock data silently
         setCategoryData(buildCategoryDisplay(defaultCategories, mockProducts));
       } finally {
         setLoading(false);
@@ -91,81 +100,176 @@ export default function FeaturedCategories() {
     load();
   }, []);
 
-  return (
-    <section className="py-12 md:py-24 px-6 relative z-20">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-4">
-          <div>
-            <h2 className="text-3xl md:text-5xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-display)' }}>
-              Popular Categories
-            </h2>
-            <p className="text-white/60" style={{ fontFamily: 'var(--font-body)' }}>Our most sought-after collections</p>
-          </div>
-        </div>
+  const scrollBy = (dir: number) => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: dir * 400, behavior: 'smooth' });
+    }
+  };
 
-        {loading ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="w-12 h-12 rounded-full border-2 border-[var(--color-garnet)] border-t-transparent animate-spin" />
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+  return (
+    <motion.section
+      ref={sectionRef}
+      className="py-16 md:py-28 relative z-20 overflow-hidden"
+      style={{ opacity: sectionOpacity }}
+    >
+      <div className="max-w-7xl mx-auto px-6">
+        {/* Section header with navigation arrows */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+          >
+            <p
+              className="text-xs tracking-[0.4em] uppercase text-gold/50 mb-3"
+              style={{ fontFamily: 'var(--font-body)' }}
+            >
+              Curated Selection
+            </p>
+            <h2 className="text-3xl md:text-5xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+              Popular <span className="gold-gradient-text">Categories</span>
+            </h2>
+            <p className="text-white/50 text-sm max-w-md" style={{ fontFamily: 'var(--font-accent)', fontStyle: 'italic', fontWeight: 300 }}>
+              Discover our most sought-after collections, each a testament to the artisan&apos;s craft
+            </p>
+          </motion.div>
+
+          {/* Scroll navigation */}
+          <motion.div
+            className="flex items-center gap-3"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.3 }}
+          >
+            <button
+              onClick={() => scrollBy(-1)}
+              data-hoverable
+              className="w-11 h-11 rounded-full border border-gold/20 flex items-center justify-center text-gold/60 hover:text-gold hover:border-gold/50 hover:bg-gold/5 transition-all duration-300"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <button
+              onClick={() => scrollBy(1)}
+              data-hoverable
+              className="w-11 h-11 rounded-full border border-gold/20 flex items-center justify-center text-gold/60 hover:text-gold hover:border-gold/50 hover:bg-gold/5 transition-all duration-300"
+            >
+              <ChevronRight size={18} />
+            </button>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Horizontal Runway Scroll */}
+      {loading ? (
+        <div className="flex justify-center items-center py-20">
+          <div className="w-12 h-12 rounded-full border-2 border-[var(--color-garnet)] border-t-transparent animate-spin" />
+        </div>
+      ) : (
+        <div className="relative">
+          {/* Fade edges */}
+          <div className="absolute left-0 top-0 bottom-0 w-16 md:w-24 z-10 pointer-events-none"
+            style={{ background: 'linear-gradient(90deg, var(--color-background), transparent)' }} />
+          <div className="absolute right-0 top-0 bottom-0 w-16 md:w-24 z-10 pointer-events-none"
+            style={{ background: 'linear-gradient(270deg, var(--color-background), transparent)' }} />
+
+          <div
+            ref={scrollContainerRef}
+            className="runway-scroll pl-6 md:pl-[max(1.5rem,calc((100vw-80rem)/2+1.5rem))] pr-24"
+          >
             {categoryData.map((category, index) => (
               <motion.a
                 key={category.name}
                 href="#collection"
                 data-hoverable
-                className="group relative bg-[var(--color-card-cream)] rounded-lg overflow-hidden flex flex-col hover:-translate-y-2 transition-transform duration-500 shadow-xl"
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-50px' }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
+                className="group relative w-[300px] md:w-[380px] rounded-xl overflow-hidden flex flex-col"
+                style={{
+                  background: hoveredIndex === index
+                    ? 'linear-gradient(145deg, rgba(212, 175, 55, 0.08), rgba(43, 12, 16, 0.95))'
+                    : 'rgba(43, 12, 16, 0.6)',
+                  border: '1px solid rgba(212, 175, 55, 0.08)',
+                  transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+                }}
+                initial={{ opacity: 0, x: 60 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: '-20px' }}
+                transition={{ duration: 0.7, delay: index * 0.12 }}
+                onMouseEnter={() => setHoveredIndex(index)}
+                onMouseLeave={() => setHoveredIndex(null)}
+                whileHover={{ y: -8 }}
               >
-                {/* Image Container */}
-                <div
-                  className="relative h-64 md:h-80 w-full overflow-hidden flex items-center justify-center"
-                  style={{ background: 'linear-gradient(135deg, #1a1200 0%, #332600 30%, #D4AF37 50%, #332600 70%, #1a1200 100%)' }}
-                >
-                  <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-500 z-10" />
+                {/* Image Container with parallax-style scale */}
+                <div className="relative h-56 md:h-72 w-full overflow-hidden">
+                  {/* Ambient glow */}
+                  <div className="absolute inset-0 z-[5] bg-gradient-to-b from-transparent via-transparent to-[#2B0C10] opacity-80" />
+                  
                   {category.image ? (
                     <Image
                       src={category.image}
                       alt={category.name}
                       fill
-                      sizes="(max-width: 768px) 100vw, 33vw"
-                      className="object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out"
+                      sizes="(max-width: 768px) 300px, 380px"
+                      className="object-cover transition-transform duration-1000 ease-out group-hover:scale-110"
                     />
                   ) : (
-                    <span className="text-7xl opacity-40">
-                      {categoryEmoji[category.name] || '✨'}
-                    </span>
+                    <div
+                      className="absolute inset-0 flex items-center justify-center"
+                      style={{ background: 'linear-gradient(135deg, #1a1200 0%, #332600 30%, #D4AF37 50%, #332600 70%, #1a1200 100%)' }}
+                    >
+                      <span className="text-7xl opacity-30 group-hover:opacity-50 transition-opacity duration-500">
+                        {categoryEmoji[category.name] || '✨'}
+                      </span>
+                    </div>
                   )}
+
+                  {/* Piece count pill */}
+                  <div className="absolute top-4 left-4 z-10 px-3 py-1 rounded-full text-[10px] tracking-widest uppercase backdrop-blur-md"
+                    style={{
+                      background: 'rgba(0,0,0,0.4)',
+                      border: '1px solid rgba(212, 175, 55, 0.2)',
+                      color: 'rgba(212, 175, 55, 0.8)',
+                      fontFamily: 'var(--font-body)',
+                    }}
+                  >
+                    {category.productCount} {category.productCount === 1 ? 'piece' : 'pieces'}
+                  </div>
                 </div>
 
                 {/* Content */}
-                <div className="p-6 md:p-8 flex flex-col flex-grow justify-between bg-[var(--color-card-cream)] z-20">
-                  <div>
-                    <h3 className="text-2xl font-bold mb-1 text-[#061A14]" style={{ fontFamily: 'var(--font-display)' }}>
-                      {category.name}
-                    </h3>
-                    <p className="text-[#061A14]/50 text-xs mb-2" style={{ fontFamily: 'var(--font-body)' }}>
-                      {category.productCount} {category.productCount === 1 ? 'piece' : 'pieces'}
-                    </p>
-                    <p className="text-[#061A14]/70 mb-8 text-sm" style={{ fontFamily: 'var(--font-body)' }}>
-                      {category.description}
-                    </p>
-                  </div>
+                <div className="p-6 md:p-7 flex flex-col flex-grow">
+                  <h3 className="text-2xl font-bold mb-2 text-white group-hover:text-gold transition-colors duration-500" style={{ fontFamily: 'var(--font-display)' }}>
+                    {category.name}
+                  </h3>
+                  <p className="text-white/40 mb-6 text-sm leading-relaxed" style={{ fontFamily: 'var(--font-accent)', fontWeight: 300, fontStyle: 'italic' }}>
+                    {category.description}
+                  </p>
 
-                  <div className="mt-auto">
-                    <div className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#061A14] text-[var(--color-card-cream)] rounded-full text-xs tracking-widest uppercase font-medium group-hover:bg-[#D4AF37] group-hover:text-[#061A14] transition-colors duration-300 w-fit">
-                      Explore Collection <ArrowRight size={14} />
+                  <div className="mt-auto flex items-center justify-between">
+                    <div className="inline-flex items-center gap-2 text-xs tracking-widest uppercase font-medium text-gold/50 group-hover:text-gold transition-colors duration-300"
+                      style={{ fontFamily: 'var(--font-body)' }}
+                    >
+                      Explore
                     </div>
+                    <motion.div
+                      className="w-9 h-9 rounded-full border border-gold/20 flex items-center justify-center text-gold/40 group-hover:text-gold group-hover:border-gold/50 group-hover:bg-gold/10 transition-all duration-500"
+                      whileHover={{ scale: 1.1 }}
+                    >
+                      <ArrowRight size={14} />
+                    </motion.div>
                   </div>
+                </div>
+
+                {/* Subtle corner accents */}
+                <div className="absolute top-0 right-0 w-12 h-12 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+                  <div className="absolute top-0 right-0 w-full h-[1px] bg-gradient-to-l from-gold/40 to-transparent" />
+                  <div className="absolute top-0 right-0 h-full w-[1px] bg-gradient-to-b from-gold/40 to-transparent" />
                 </div>
               </motion.a>
             ))}
           </div>
-        )}
-      </div>
-    </section>
+        </div>
+      )}
+    </motion.section>
   );
 }

@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Search, Trash2, Edit2, Copy, Package,
   ChevronDown, ChevronUp, ChevronsUpDown, Check,
-  LayoutGrid, List,
+  LayoutGrid, List, Sparkles,
 } from 'lucide-react';
 import StatusBadge from '@/components/admin/StatusBadge';
 import {
@@ -52,14 +52,18 @@ export default function AdminProductsPage() {
   const handleSearch = (val: string) => { setSearch(val); setPage(1); };
 
   const refresh = useCallback(async () => {
-    const data = await getProducts();
-    setProducts(data);
-    setSelected(new Set());
+    try {
+      const data = await getProducts();
+      setProducts(data);
+      setSelected(new Set());
+    } catch (err) {
+      console.error('[AdminProducts] Failed to load:', (err as Error).message);
+    }
   }, []);
 
   useEffect(() => {
     refresh();
-    getCategories().then(cats => setCategoryNames(cats.map(c => c.name)));
+    getCategories().then(cats => setCategoryNames(cats.map(c => c.name))).catch(() => {});
   }, [refresh]);
 
   // ── Filtering & sorting ──────────────────────────────────────────────────
@@ -120,7 +124,7 @@ export default function AdminProductsPage() {
   };
 
   const SortIcon = ({ field }: { field: SortField }) => {
-    if (sortField !== field) return <ChevronsUpDown className="w-3 h-3 text-white/20" />;
+    if (sortField !== field) return <ChevronsUpDown className="w-3 h-3 text-black/20" />;
     return sortDir === 'asc'
       ? <ChevronUp className="w-3 h-3 text-[#D4AF37]" />
       : <ChevronDown className="w-3 h-3 text-[#D4AF37]" />;
@@ -187,7 +191,7 @@ export default function AdminProductsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-[26px] text-white/90 font-light tracking-wide"
+          <h1 className="text-[26px] text-black/90 font-medium tracking-wide"
             style={{ fontFamily: 'var(--font-accent)' }}>
             Products
           </h1>
@@ -195,26 +199,35 @@ export default function AdminProductsPage() {
             {filtered.length} total
           </p>
         </div>
-        <Link
-          href="/admin/products/new"
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#D4AF37] text-black text-sm font-semibold hover:bg-[#FFD700] transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Add Product
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/admin/products/bulk"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#D4AF37]/40 bg-[#D4AF37]/10 text-black/90 hover:bg-[#D4AF37]/20 text-sm transition-colors"
+          >
+            <Sparkles className="w-4 h-4" />
+            Bulk Add
+          </Link>
+          <Link
+            href="/admin/products/new"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#D4AF37] text-black text-sm font-semibold hover:bg-[#FFD700] transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Add Product
+          </Link>
+        </div>
       </div>
 
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row gap-3">
         {/* Search */}
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black/55" />
           <input
             type="text"
             value={search}
             onChange={e => handleSearch(e.target.value)}
             placeholder="Search products…"
-            className="w-full bg-white/[0.03] border rounded-xl pl-9 pr-4 py-2.5 text-white/85 text-sm placeholder:text-white/22 outline-none focus:border-[rgba(212,175,55,0.3)] transition-colors [border-color:var(--a-border)]"
+            className="w-full bg-black/[0.03] border rounded-xl pl-9 pr-4 py-2.5 text-black/85 text-sm placeholder:text-black/22 outline-none focus:border-[rgba(212,175,55,0.3)] transition-colors [border-color:var(--a-border)]"
           />
         </div>
 
@@ -222,7 +235,7 @@ export default function AdminProductsPage() {
         <select
           value={categoryFilter}
           onChange={e => { setCategoryFilter(e.target.value); setPage(1); }}
-          className="bg-white/[0.03] border rounded-xl px-3 py-2.5 text-white/60 text-sm outline-none focus:border-[rgba(212,175,55,0.3)] transition-colors [border-color:var(--a-border)]"
+          className="bg-black/[0.03] border rounded-xl px-3 py-2.5 text-black/95 text-sm outline-none focus:border-[rgba(212,175,55,0.3)] transition-colors [border-color:var(--a-border)]"
         >
           <option value="all">All Categories</option>
           {categoryNames.map(c => <option key={c} value={c}>{c}</option>)}
@@ -232,22 +245,22 @@ export default function AdminProductsPage() {
         <select
           value={statusFilter}
           onChange={e => { setStatusFilter(e.target.value as ProductStatus | 'all'); setPage(1); }}
-          className="bg-white/[0.03] border rounded-xl px-3 py-2.5 text-white/60 text-sm outline-none focus:border-[rgba(212,175,55,0.3)] transition-colors [border-color:var(--a-border)]"
+          className="bg-black/[0.03] border rounded-xl px-3 py-2.5 text-black/95 text-sm outline-none focus:border-[rgba(212,175,55,0.3)] transition-colors [border-color:var(--a-border)]"
         >
           {STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
 
         {/* View toggle */}
-        <div className="flex rounded-xl border border-white/[0.08] overflow-hidden">
+        <div className="flex rounded-xl border shadow-sm border-black/[0.08] overflow-hidden">
           <button
             onClick={() => setView('table')}
-            className={`px-3 py-2.5 transition-colors ${view === 'table' ? 'bg-white/[0.08] text-white' : 'text-white/30 hover:text-white/60'}`}
+            className={`px-3 py-2.5 transition-colors ${view === 'table' ? 'bg-black/[0.08] text-black' : 'text-black/55 hover:text-black/95'}`}
           >
             <List className="w-4 h-4" />
           </button>
           <button
             onClick={() => setView('grid')}
-            className={`px-3 py-2.5 transition-colors ${view === 'grid' ? 'bg-white/[0.08] text-white' : 'text-white/30 hover:text-white/60'}`}
+            className={`px-3 py-2.5 transition-colors ${view === 'grid' ? 'bg-black/[0.08] text-black' : 'text-black/55 hover:text-black/95'}`}
           >
             <LayoutGrid className="w-4 h-4" />
           </button>
@@ -270,7 +283,7 @@ export default function AdminProductsPage() {
               <select
                 value={bulkAction}
                 onChange={e => setBulkAction(e.target.value)}
-                className="bg-white/[0.06] border border-white/[0.1] rounded-lg px-3 py-1.5 text-white/70 text-sm outline-none"
+                className="bg-black/[0.06] border border-black/[0.1] rounded-lg px-3 py-1.5 text-black/90 text-sm outline-none"
               >
                 <option value="">Choose action…</option>
                 <optgroup label="Status">
@@ -297,7 +310,7 @@ export default function AdminProductsPage() {
             </div>
             <button
               onClick={() => setSelected(new Set())}
-              className="text-white/40 hover:text-white text-sm transition-colors"
+              className="text-black/95 hover:text-black text-sm transition-colors"
             >
               Clear
             </button>
@@ -307,11 +320,11 @@ export default function AdminProductsPage() {
 
       {/* Table view */}
       {view === 'table' && (
-        <div className="rounded-2xl overflow-hidden border" style={{ background: 'var(--a-surface)', borderColor: 'var(--a-border)' }}>
+        <div className="rounded-2xl overflow-hidden border shadow-sm" style={{ background: 'var(--a-surface)', borderColor: 'var(--a-border)' }}>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-sm">
               <thead>
-                <tr className="border-b text-white/35 text-[10px] uppercase tracking-[0.12em]" style={{ borderColor: 'var(--a-border)' }}>
+                <tr className="border-b text-black/35 text-[10px] uppercase tracking-[0.12em]" style={{ borderColor: 'var(--a-border)' }}>
                   <th className="px-4 py-3 w-10">
                     <input
                       type="checkbox"
@@ -321,23 +334,23 @@ export default function AdminProductsPage() {
                     />
                   </th>
                   <th className="px-4 py-3 font-medium">
-                    <button onClick={() => handleSort('name')} className="flex items-center gap-1 hover:text-white transition-colors">
+                    <button onClick={() => handleSort('name')} className="flex items-center gap-1 hover:text-black transition-colors">
                       Product <SortIcon field="name" />
                     </button>
                   </th>
                   <th className="px-4 py-3 font-medium">
-                    <button onClick={() => handleSort('category')} className="flex items-center gap-1 hover:text-white transition-colors">
+                    <button onClick={() => handleSort('category')} className="flex items-center gap-1 hover:text-black transition-colors">
                       Category <SortIcon field="category" />
                     </button>
                   </th>
                   <th className="px-4 py-3 font-medium">Carat</th>
                   <th className="px-4 py-3 font-medium">
-                    <button onClick={() => handleSort('status')} className="flex items-center gap-1 hover:text-white transition-colors">
+                    <button onClick={() => handleSort('status')} className="flex items-center gap-1 hover:text-black transition-colors">
                       Status <SortIcon field="status" />
                     </button>
                   </th>
                   <th className="px-4 py-3 font-medium">
-                    <button onClick={() => handleSort('createdAt')} className="flex items-center gap-1 hover:text-white transition-colors">
+                    <button onClick={() => handleSort('createdAt')} className="flex items-center gap-1 hover:text-black transition-colors">
                       Added <SortIcon field="createdAt" />
                     </button>
                   </th>
@@ -348,7 +361,7 @@ export default function AdminProductsPage() {
                 <AnimatePresence mode="popLayout">
                   {paginated.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="px-4 py-16 text-center text-white/30">
+                      <td colSpan={7} className="px-4 py-16 text-center text-black/55">
                         {search || statusFilter !== 'all' || categoryFilter !== 'all'
                           ? 'No products match your filters.'
                           : 'No products yet.'}
@@ -362,7 +375,7 @@ export default function AdminProductsPage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className={`border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors ${
+                        className={`border-b border-black/[0.03] hover:bg-black/5 transition-colors ${
                           selected.has(p.id) ? 'bg-[rgba(212,175,55,0.04)]' : ''
                         }`}
                       >
@@ -376,43 +389,43 @@ export default function AdminProductsPage() {
                         </td>
                         <td className="px-4 py-3">
                           <Link href={`/admin/products/${p.id}`} className="flex items-center gap-3 group">
-                            <div className="w-9 h-9 rounded-lg bg-white/[0.05] border border-white/[0.06] overflow-hidden shrink-0">
+                            <div className="w-9 h-9 rounded-lg bg-black/5 border border-black/10 overflow-hidden shrink-0">
                               {p.images?.[0]
                                 ? <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover" />
-                                : <Package className="w-4 h-4 text-white/20 m-auto mt-2.5" />
+                                : <Package className="w-4 h-4 text-black/20 m-auto mt-2.5" />
                               }
                             </div>
                             <div className="min-w-0">
-                              <p className="text-white/80 group-hover:text-white transition-colors truncate font-medium">{p.name}</p>
+                              <p className="text-black/95 group-hover:text-black transition-colors truncate font-medium">{p.name}</p>
                               {p.featured && (
                                 <span className="text-[#D4AF37] text-[9px] uppercase tracking-wider">Featured</span>
                               )}
                             </div>
                           </Link>
                         </td>
-                        <td className="px-4 py-3 text-white/50">{p.category}</td>
-                        <td className="px-4 py-3 text-white/50">{p.carat}K</td>
+                        <td className="px-4 py-3 text-black/90">{p.category}</td>
+                        <td className="px-4 py-3 text-black/90">{p.carat}K</td>
                         <td className="px-4 py-3"><StatusBadge status={p.status} /></td>
-                        <td className="px-4 py-3 text-white/30 text-xs">{p.createdAt}</td>
+                        <td className="px-4 py-3 text-black/55 text-xs">{p.createdAt}</td>
                         <td className="px-4 py-3">
                           <div className="flex items-center justify-end gap-1">
                             <Link
                               href={`/admin/products/${p.id}`}
-                              className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/[0.08] transition-colors"
+                              className="p-1.5 rounded-lg text-black/95 hover:text-black hover:bg-black/[0.08] transition-colors"
                               title="Edit"
                             >
                               <Edit2 className="w-3.5 h-3.5" />
                             </Link>
                             <button
                               onClick={() => handleDuplicate(p.id, p.name)}
-                              className="p-1.5 rounded-lg text-white/40 hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.08)] transition-colors"
+                              className="p-1.5 rounded-lg text-black/95 hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.08)] transition-colors"
                               title="Duplicate"
                             >
                               <Copy className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => handleDelete(p.id, p.name)}
-                              className="p-1.5 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-400/[0.08] transition-colors"
+                              className="p-1.5 rounded-lg text-black/95 hover:text-red-400 hover:bg-red-400/[0.08] transition-colors"
                               title="Delete"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -434,7 +447,7 @@ export default function AdminProductsPage() {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           <AnimatePresence mode="popLayout">
             {paginated.length === 0 ? (
-              <motion.div className="col-span-full py-16 text-center text-white/30">
+              <motion.div className="col-span-full py-16 text-center text-black/55">
                 No products match your filters.
               </motion.div>
             ) : (
@@ -447,7 +460,7 @@ export default function AdminProductsPage() {
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ delay: i * 0.03 }}
                   className={`relative group rounded-xl overflow-hidden transition-colors border ${
-                    selected.has(p.id) ? 'border-[#D4AF37]/40' : 'hover:border-white/[0.1]'
+                    selected.has(p.id) ? 'border-[#D4AF37]/40' : 'hover:border-black/[0.1]'
                   }`}
                   style={selected.has(p.id) ? { background: 'var(--a-elevated)' } : { background: 'var(--a-surface)', borderColor: 'var(--a-border)' }}
                 >
@@ -459,19 +472,19 @@ export default function AdminProductsPage() {
                     <div className={`w-5 h-5 rounded border flex items-center justify-center cursor-pointer transition-colors ${
                       selected.has(p.id)
                         ? 'bg-[#D4AF37] border-[#D4AF37]'
-                        : 'bg-black/50 border-white/30'
+                        : 'bg-black/50 border-black/30'
                     }`}>
                       {selected.has(p.id) && <Check className="w-3 h-3 text-black" />}
                     </div>
                   </div>
 
                   {/* Image */}
-                  <div className="aspect-square bg-white/[0.03] overflow-hidden">
+                  <div className="aspect-square bg-black/[0.03] overflow-hidden">
                     {p.images?.[0]
                       ? <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                       : (
                         <div className="w-full h-full flex items-center justify-center">
-                          <Package className="w-8 h-8 text-white/10" />
+                          <Package className="w-8 h-8 text-black/10" />
                         </div>
                       )
                     }
@@ -479,15 +492,15 @@ export default function AdminProductsPage() {
 
                   {/* Info */}
                   <div className="p-3">
-                    <p className="text-white/80 text-xs font-medium truncate">{p.name}</p>
-                    <p className="text-white/30 text-[10px] mt-0.5">{p.category}</p>
+                    <p className="text-black/95 text-xs font-medium truncate">{p.name}</p>
+                    <p className="text-black/55 text-[10px] mt-0.5">{p.category}</p>
                     <div className="mt-2 flex items-center justify-between">
                       <StatusBadge status={p.status} />
                       <div className="flex gap-1">
-                        <Link href={`/admin/products/${p.id}`} className="p-1 text-white/30 hover:text-white transition-colors">
+                        <Link href={`/admin/products/${p.id}`} className="p-1 text-black/55 hover:text-black transition-colors">
                           <Edit2 className="w-3 h-3" />
                         </Link>
-                        <button onClick={() => handleDelete(p.id, p.name)} className="p-1 text-white/30 hover:text-red-400 transition-colors">
+                        <button onClick={() => handleDelete(p.id, p.name)} className="p-1 text-black/55 hover:text-red-400 transition-colors">
                           <Trash2 className="w-3 h-3" />
                         </button>
                       </div>
@@ -506,7 +519,7 @@ export default function AdminProductsPage() {
           <button
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="px-4 py-2 rounded-lg text-sm text-white/50 border border-white/[0.08] hover:text-white hover:border-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 rounded-lg text-sm text-black/90 border border-black/[0.08] hover:text-black hover:border-black/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             Previous
           </button>
@@ -517,7 +530,7 @@ export default function AdminProductsPage() {
               className={`w-9 h-9 rounded-lg text-sm transition-colors ${
                 n === page
                   ? 'bg-[#D4AF37] text-black font-medium'
-                  : 'text-white/50 border border-white/[0.08] hover:text-white hover:border-white/20'
+                  : 'text-black/90 border border-black/[0.08] hover:text-black hover:border-black/20'
               }`}
             >
               {n}
@@ -526,7 +539,7 @@ export default function AdminProductsPage() {
           <button
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
-            className="px-4 py-2 rounded-lg text-sm text-white/50 border border-white/[0.08] hover:text-white hover:border-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 rounded-lg text-sm text-black/90 border border-black/[0.08] hover:text-black hover:border-black/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             Next
           </button>

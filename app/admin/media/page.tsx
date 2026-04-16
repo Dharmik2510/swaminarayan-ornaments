@@ -19,7 +19,7 @@ export default function AdminMediaPage() {
   const [selected, setSelected] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => { getMediaItems().then(setItems); }, []);
+  useEffect(() => { getMediaItems().then(setItems).catch(err => console.error('[AdminMedia] Failed to load:', err.message)); }, []);
 
   const processFiles = useCallback(async (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -83,7 +83,7 @@ export default function AdminMediaPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-[26px] text-white/90 font-light tracking-wide"
+          <h1 className="text-[26px] text-black/90 font-medium tracking-wide"
             style={{ fontFamily: 'var(--font-accent)' }}>
             Media Library
           </h1>
@@ -108,14 +108,14 @@ export default function AdminMediaPage() {
         onDragLeave={() => setDragging(false)}
         onDrop={handleDrop}
         className={`border-2 border-dashed rounded-2xl transition-all duration-200 ${
-          dragging ? 'border-[#D4AF37] bg-[rgba(212,175,55,0.04)]' : 'border-white/[0.06] hover:border-white/[0.1]'
+          dragging ? 'border-[#D4AF37] bg-[rgba(212,175,55,0.04)]' : 'border-black/10 hover:border-black/[0.1]'
         }`}
       >
         {items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
-            <ImageIcon className="w-10 h-10 text-white/10" />
-            <p className="text-white/40 text-sm">Drop images here or click Upload</p>
-            <p className="text-white/20 text-xs">JPEG, PNG, WebP — auto-compressed</p>
+            <ImageIcon className="w-10 h-10 text-black/10" />
+            <p className="text-black/95 text-sm">Drop images here or click Upload</p>
+            <p className="text-black/20 text-xs">JPEG, PNG, WebP — auto-compressed</p>
           </div>
         ) : (
           <div className="p-4">
@@ -130,7 +130,7 @@ export default function AdminMediaPage() {
                     exit={{ opacity: 0, scale: 0.9 }}
                     onClick={() => setSelected(item.id === selected ? null : item.id)}
                     className={`relative group aspect-square rounded-xl overflow-hidden cursor-pointer border-2 transition-colors ${
-                      selected === item.id ? 'border-[#D4AF37]' : 'border-transparent hover:border-white/20'
+                      selected === item.id ? 'border-[#D4AF37]' : 'border-transparent hover:border-black/20'
                     }`}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -140,7 +140,7 @@ export default function AdminMediaPage() {
                         onClick={e => { e.stopPropagation(); handleDelete(item); }}
                         className="p-1.5 bg-red-500/80 rounded-lg hover:bg-red-500 transition-colors"
                       >
-                        <Trash2 className="w-3 h-3 text-white" />
+                        <Trash2 className="w-3 h-3 text-black" />
                       </button>
                     </div>
                   </motion.div>
@@ -162,18 +162,18 @@ export default function AdminMediaPage() {
           style={{ background: 'var(--a-surface)', borderColor: 'var(--a-border)' }}
           >
             <div className="flex items-start gap-5">
-              <div className="w-24 h-24 rounded-xl overflow-hidden shrink-0 border border-white/[0.08]">
+              <div className="w-24 h-24 rounded-xl overflow-hidden shrink-0 border border-black/[0.08]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={selectedItem.url} alt={selectedItem.name} className="w-full h-full object-cover" />
               </div>
               <div className="flex-1 min-w-0 space-y-3">
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-white/80 text-sm font-medium truncate">{selectedItem.name}</p>
-                    <p className="text-white/30 text-xs mt-0.5">{formatBytes(selectedItem.size)} · {selectedItem.type}</p>
-                    <p className="text-white/20 text-xs">{new Date(selectedItem.uploadedAt).toLocaleString()}</p>
+                    <p className="text-black/95 text-sm font-medium truncate">{selectedItem.name}</p>
+                    <p className="text-black/55 text-xs mt-0.5">{formatBytes(selectedItem.size)} · {selectedItem.type}</p>
+                    <p className="text-black/20 text-xs">{new Date(selectedItem.uploadedAt).toLocaleString()}</p>
                   </div>
-                  <button onClick={() => setSelected(null)} className="text-white/30 hover:text-white transition-colors">
+                  <button onClick={() => setSelected(null)} className="text-black/55 hover:text-black transition-colors">
                     <X className="w-4 h-4" />
                   </button>
                 </div>
@@ -182,9 +182,9 @@ export default function AdminMediaPage() {
                 <div className="space-y-2">
                   <div className="flex flex-wrap gap-1.5">
                     {selectedItem.tags.map((t: string) => (
-                      <span key={t} className="flex items-center gap-1 px-2 py-0.5 bg-white/[0.06] rounded-full text-white/60 text-xs">
+                      <span key={t} className="flex items-center gap-1 px-2 py-0.5 bg-black/[0.06] rounded-full text-black/95 text-xs">
                         {t}
-                        <button onClick={() => handleRemoveTag(selectedItem.id, t)} className="text-white/30 hover:text-white">
+                        <button onClick={() => handleRemoveTag(selectedItem.id, t)} className="text-black/55 hover:text-black">
                           <X className="w-2.5 h-2.5" />
                         </button>
                       </span>
@@ -197,11 +197,11 @@ export default function AdminMediaPage() {
                       onChange={e => setTagInput(prev => ({ ...prev, [selectedItem.id]: e.target.value }))}
                       onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddTag(selectedItem.id); } }}
                       placeholder="Add tag…"
-                      className="bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-1.5 text-white text-xs placeholder:text-white/20 outline-none focus:border-[rgba(212,175,55,0.3)] transition-colors flex-1"
+                      className="bg-black/5 border border-black/[0.08] rounded-lg px-3 py-1.5 text-black text-xs placeholder:text-black/20 outline-none focus:border-[rgba(212,175,55,0.3)] transition-colors flex-1"
                     />
                     <button
                       onClick={() => handleAddTag(selectedItem.id)}
-                      className="px-3 py-1.5 rounded-lg border border-white/[0.1] text-white/50 hover:text-white text-xs transition-colors"
+                      className="px-3 py-1.5 rounded-lg border border-black/[0.1] text-black/90 hover:text-black text-xs transition-colors"
                     >
                       <Tag className="w-3 h-3" />
                     </button>

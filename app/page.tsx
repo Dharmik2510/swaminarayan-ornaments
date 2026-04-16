@@ -11,9 +11,12 @@ import { MessageCircle } from 'lucide-react';
 const GoldRevealLoader = dynamic(() => import('@/components/GoldRevealLoader'), { ssr: false });
 const GoldCursor = dynamic(() => import('@/components/GoldCursor'), { ssr: false });
 const GoldDustParticles = dynamic(() => import('@/components/GoldDustParticles'), { ssr: false });
+const GoldInkTrail = dynamic(() => import('@/components/GoldInkTrail'), { ssr: false });
 const Navbar = dynamic(() => import('@/components/Navbar'), { ssr: false });
 const HeroSection = dynamic(() => import('@/components/HeroSection'), { ssr: false });
+const LuxuryMarquee = dynamic(() => import('@/components/LuxuryMarquee'), { ssr: false });
 const FeaturedCategories = dynamic(() => import('@/components/FeaturedCategories'), { ssr: false });
+const DiamondDivider = dynamic(() => import('@/components/DiamondDivider'), { ssr: false });
 const CollectionSection = dynamic(() => import('@/components/CollectionSection'), { ssr: false });
 const AboutSection = dynamic(() => import('@/components/AboutSection'), { ssr: false });
 const ProductDetailModal = dynamic(() => import('@/components/ProductDetailModal'), { ssr: false });
@@ -57,6 +60,9 @@ export default function Home() {
       {/* Custom Cursor */}
       <GoldCursor />
 
+      {/* Gold Ink Trail — calligraphy-style cursor trail */}
+      <GoldInkTrail />
+
       {/* Gold dust particles overlay */}
       <GoldDustParticles />
 
@@ -72,13 +78,14 @@ export default function Home() {
         {/* Hero */}
         <HeroSection />
 
+        {/* Luxury Marquee — storytelling ticker */}
+        <LuxuryMarquee />
+
         {/* Featured Categories */}
         <FeaturedCategories />
 
-        {/* Divider */}
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="h-[1px]" style={{ background: 'linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.15), transparent)' }} />
-        </div>
+        {/* Diamond Divider */}
+        <DiamondDivider />
 
         {/* Collection */}
         <CollectionSection
@@ -89,10 +96,8 @@ export default function Home() {
           onSelectProduct={setSelectedProduct}
         />
 
-        {/* Divider */}
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="h-[1px]" style={{ background: 'linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.15), transparent)' }} />
-        </div>
+        {/* Diamond Divider */}
+        <DiamondDivider />
 
         {/* About */}
         <AboutSection />
@@ -101,16 +106,25 @@ export default function Home() {
         <Footer />
       </motion.div>
 
-      {/* Floating Chat Button */}
-      <motion.button
-        className="fixed bottom-8 right-8 z-[90] w-14 h-14 rounded-full bg-[#D4AF37] flex items-center justify-center text-black shadow-gold hover:bg-[#FFD700] transition-colors"
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        style={{ cursor: 'none' }}
-        data-hoverable
+      {/* Floating Chat Button — elevated with ring pulse */}
+      <motion.div
+        className="fixed bottom-8 right-8 z-[90]"
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 2, type: 'spring' }}
       >
-        <MessageCircle size={24} strokeWidth={1.5} />
-      </motion.button>
+        {/* Pulse ring */}
+        <div className="absolute inset-0 rounded-full bg-[#D4AF37]/20 animate-ping" />
+        <motion.button
+          className="relative w-14 h-14 rounded-full bg-[#D4AF37] flex items-center justify-center text-black shadow-gold hover:bg-[#FFD700] transition-colors"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          style={{ cursor: 'none' }}
+          data-hoverable
+        >
+          <MessageCircle size={24} strokeWidth={1.5} />
+        </motion.button>
+      </motion.div>
 
       {/* Product Detail Modal */}
       <ProductDetailModal

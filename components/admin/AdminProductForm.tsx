@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Save, ArrowLeft, Loader2, X } from 'lucide-react';
+import { Save, ArrowLeft, Loader2, X, Sparkles } from 'lucide-react';
 import AdminImageUpload from './AdminImageUpload';
 import { useAdmin } from './AdminContext';
 import { addProduct, updateProduct } from '@/lib/firebase';
@@ -34,20 +34,32 @@ function Field({ label, children, hint }: { label: string; children: React.React
     <div className="space-y-1.5">
       <label className="block text-[10px] tracking-[0.18em] uppercase" style={{ color: 'var(--a-muted)' }}>{label}</label>
       {children}
-      {hint && <p className="text-[11px] leading-relaxed" style={{ color: 'var(--a-faint)' }}>{hint}</p>}
+      {hint && <p className="text-[11px] leading-relaxed text-black/50">{hint}</p>}
+    </div>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-2xl p-6 space-y-5 border" style={{ background: 'var(--a-surface)', borderColor: 'var(--a-border)' }}>
+      <h3 className="text-[10px] tracking-[0.22em] uppercase pb-3 border-b"
+        style={{ color: 'var(--a-muted)', borderColor: 'var(--a-border)' }}>
+        {title}
+      </h3>
+      {children}
     </div>
   );
 }
 
 // ─── Input styles ─────────────────────────────────────────────────────────────
 const inputCls = `
-  w-full bg-white/[0.03] border rounded-xl px-4 py-2.5 text-white/85 text-sm
-  placeholder:text-white/18 outline-none focus:border-[rgba(212,175,55,0.3)]
-  focus:bg-white/[0.045] transition-all duration-200
+  w-full bg-black/[0.03] border rounded-xl px-4 py-2.5 text-black/85 text-sm
+  placeholder:text-black/18 outline-none focus:border-[rgba(212,175,55,0.3)]
+  focus:bg-black/[0.045] transition-all duration-200
   [border-color:var(--a-border)]
 `;
 const selectCls = `
-  w-full border rounded-xl px-4 py-2.5 text-white/65 text-sm
+  w-full border rounded-xl px-4 py-2.5 text-black/65 text-sm
   outline-none focus:border-[rgba(212,175,55,0.3)] transition-all duration-200
   [background:var(--a-surface)] [border-color:var(--a-border)]
 `;
@@ -62,6 +74,7 @@ export default function AdminProductForm({ product }: Props) {
   const [saving, setSaving] = useState(false);
   const [tagInput, setTagInput] = useState('');
   const [autoSaveMsg, setAutoSaveMsg] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [form, setForm] = useState<FormData>({
@@ -117,6 +130,41 @@ export default function AdminProductForm({ product }: Props) {
 
   const removeTag = (tag: string) => set('tags', form.tags.filter(t => t !== tag));
 
+  const generateWithAI = async () => {
+    if (!form.images[0]) {
+      toast('Upload an image first.', 'error');
+      return;
+    }
+    setAiLoading(true);
+    try {
+      const res = await fetch('/api/ai/generate-product', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          imageUrl: form.images[0],
+          categories: categoryNames,
+          carat: form.carat,
+        }),
+      });
+      if (!res.ok) throw new Error('AI request failed');
+      const g = await res.json();
+      setForm(f => ({
+        ...f,
+        name: f.name || g.name || '',
+        description: f.description || g.description || '',
+        category: f.category || g.category || '',
+        tags: f.tags.length ? f.tags : (g.tags ?? []),
+        seoTitle: f.seoTitle || g.seoTitle || '',
+        seoDescription: f.seoDescription || g.seoDescription || '',
+      }));
+      toast('AI draft ready. Review before saving.', 'success');
+    } catch {
+      toast('AI generation failed.', 'error');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent, status?: ProductStatus) => {
     e.preventDefault();
     setSaving(true);
@@ -138,15 +186,7 @@ export default function AdminProductForm({ product }: Props) {
     }
   };
 
-  const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <div className="rounded-2xl p-6 space-y-5 border" style={{ background: 'var(--a-surface)', borderColor: 'var(--a-border)' }}>
-      <h3 className="text-[10px] tracking-[0.22em] uppercase pb-3 border-b"
-        style={{ color: 'var(--a-muted)', borderColor: 'var(--a-border)' }}>
-        {title}
-      </h3>
-      {children}
-    </div>
-  );
+
 
   return (
     <form onSubmit={(e) => handleSubmit(e)} className="space-y-6 max-w-5xl">
@@ -156,12 +196,12 @@ export default function AdminProductForm({ product }: Props) {
           <button
             type="button"
             onClick={() => router.push('/admin/products')}
-            className="p-2 rounded-xl border border-white/[0.08] text-white/40 hover:text-white hover:border-white/20 transition-colors"
+            className="p-2 rounded-xl border shadow-sm border-black/[0.08] text-black/95 hover:text-black hover:border-black/20 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div>
-            <h1 className="text-[26px] text-white/90 font-light tracking-wide"
+            <h1 className="text-[26px] text-black/90 font-medium tracking-wide"
               style={{ fontFamily: 'var(--font-accent)' }}>
               {isEditing ? 'Edit Product' : 'New Product'}
             </h1>
@@ -182,9 +222,19 @@ export default function AdminProductForm({ product }: Props) {
         <div className="flex items-center gap-2">
           <button
             type="button"
+            onClick={generateWithAI}
+            disabled={aiLoading || form.images.length === 0}
+            title={form.images.length === 0 ? 'Upload an image to enable' : 'Generate name, description, tags & SEO from the first image'}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#D4AF37]/40 bg-[#D4AF37]/10 text-black/90 hover:bg-[#D4AF37]/20 text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {aiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+            {aiLoading ? 'Generating…' : 'Generate with AI'}
+          </button>
+          <button
+            type="button"
             onClick={(e) => handleSubmit(e as unknown as React.FormEvent, 'draft')}
             disabled={saving}
-            className="px-4 py-2.5 rounded-xl border border-white/[0.1] text-white/60 hover:text-white text-sm transition-colors"
+            className="px-4 py-2.5 rounded-xl border shadow-sm border-black/[0.1] text-black/95 hover:text-black text-sm transition-colors"
           >
             Save Draft
           </button>
@@ -270,7 +320,7 @@ export default function AdminProductForm({ product }: Props) {
                     type="button"
                     onClick={addTag}
                     disabled={!tagInput.trim()}
-                    className="px-4 py-2.5 rounded-xl border border-white/[0.1] text-white/60 hover:text-white text-sm disabled:opacity-40 transition-colors whitespace-nowrap"
+                    className="px-4 py-2.5 rounded-xl border shadow-sm border-black/[0.1] text-black/95 hover:text-black text-sm disabled:opacity-40 transition-colors whitespace-nowrap"
                   >
                     Add
                   </button>
@@ -278,9 +328,9 @@ export default function AdminProductForm({ product }: Props) {
                 {form.tags.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {form.tags.map(tag => (
-                      <span key={tag} className="flex items-center gap-1.5 px-3 py-1 bg-white/[0.06] border border-white/[0.08] rounded-full text-white/70 text-xs">
+                      <span key={tag} className="flex items-center gap-1.5 px-3 py-1 bg-black/[0.06] border border-black/[0.08] rounded-full text-black/90 text-xs">
                         {tag}
-                        <button type="button" onClick={() => removeTag(tag)} className="text-white/30 hover:text-white transition-colors">
+                        <button type="button" onClick={() => removeTag(tag)} className="text-black/55 hover:text-black transition-colors">
                           <X className="w-2.5 h-2.5" />
                         </button>
                       </span>
@@ -341,18 +391,18 @@ export default function AdminProductForm({ product }: Props) {
               <div
                 onClick={() => set('featured', !form.featured)}
                 className={`relative w-10 h-5 rounded-full transition-colors duration-200 ${
-                  form.featured ? 'bg-[#D4AF37]' : 'bg-white/[0.1]'
+                  form.featured ? 'bg-[#D4AF37]' : 'bg-black/[0.1]'
                 }`}
               >
                 <div
-                  className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform duration-200 ${
+                  className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-black transition-transform duration-200 ${
                     form.featured ? 'translate-x-5' : 'translate-x-0'
                   }`}
                 />
               </div>
               <div>
-                <p className="text-white/70 text-sm">Featured Product</p>
-                <p className="text-white/30 text-xs">Shown in featured collection</p>
+                <p className="text-black/90 text-sm">Featured Product</p>
+                <p className="text-black/55 text-xs">Shown in featured collection</p>
               </div>
             </label>
           </Section>
@@ -361,29 +411,29 @@ export default function AdminProductForm({ product }: Props) {
             <div className="space-y-2 text-sm">
               {product?.id && (
                 <div className="flex justify-between">
-                  <span className="text-white/30">ID</span>
-                  <span className="text-white/50 font-mono text-xs">{product.id}</span>
+                  <span className="text-black/55">ID</span>
+                  <span className="text-black/90 font-mono text-xs">{product.id}</span>
                 </div>
               )}
               {product?.createdAt && (
                 <div className="flex justify-between">
-                  <span className="text-white/30">Created</span>
-                  <span className="text-white/50">{product.createdAt}</span>
+                  <span className="text-black/55">Created</span>
+                  <span className="text-black/90">{product.createdAt}</span>
                 </div>
               )}
               {product?.updatedAt && (
                 <div className="flex justify-between">
-                  <span className="text-white/30">Updated</span>
-                  <span className="text-white/50">{product.updatedAt}</span>
+                  <span className="text-black/55">Updated</span>
+                  <span className="text-black/90">{product.updatedAt}</span>
                 </div>
               )}
               <div className="flex justify-between">
-                <span className="text-white/30">Images</span>
-                <span className="text-white/50">{form.images.length}</span>
+                <span className="text-black/55">Images</span>
+                <span className="text-black/90">{form.images.length}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-white/30">Tags</span>
-                <span className="text-white/50">{form.tags.length}</span>
+                <span className="text-black/55">Tags</span>
+                <span className="text-black/90">{form.tags.length}</span>
               </div>
             </div>
           </Section>

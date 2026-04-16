@@ -4,11 +4,20 @@ import { motion } from 'framer-motion';
 
 export default function TilakBackground() {
   return (
-    <div className="absolute inset-0 z-0 overflow-hidden flex items-center justify-center opacity-30 pointer-events-none">
+    <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+      {/* 
+        Desktop: Subtle watermark centered in the viewport.
+        Sized modestly so it never interferes with text or image columns.
+      */}
       <svg
         viewBox="0 0 400 500"
-        className="w-full h-full max-w-[800px] absolute mix-blend-screen"
-        style={{ filter: 'drop-shadow(0 0 15px rgba(212,175,55,0.4))' }}
+        className="
+          hidden lg:block
+          absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2
+          h-[50%] max-h-[420px] w-auto
+          opacity-[0.12] mix-blend-screen
+        "
+        style={{ filter: 'drop-shadow(0 0 8px rgba(212,175,55,0.15))' }}
       >
         <defs>
           <linearGradient id="bg-gold-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -63,7 +72,7 @@ export default function TilakBackground() {
         <motion.circle
           cx="200"
           cy="250"
-          r="180"
+          r="150"
           fill="none"
           stroke="url(#bg-gold-gradient)"
           strokeWidth="0.5"
@@ -78,7 +87,7 @@ export default function TilakBackground() {
         <motion.circle
           cx="200"
           cy="250"
-          r="210"
+          r="170"
           fill="none"
           stroke="url(#bg-gold-gradient)"
           strokeWidth="0.25"
@@ -87,6 +96,53 @@ export default function TilakBackground() {
           animate={{ rotate: 0, opacity: 0.2 }}
           transition={{ duration: 100, ease: "linear", repeat: Infinity }}
           style={{ transformOrigin: "200px 250px" }}
+        />
+      </svg>
+
+      {/* Mobile: show a subtle, smaller version centered */}
+      <svg
+        viewBox="0 0 400 500"
+        className="
+          block lg:hidden
+          absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2
+          h-[45%] max-h-[350px] w-auto
+          opacity-[0.08] mix-blend-screen
+        "
+        style={{ filter: 'drop-shadow(0 0 6px rgba(212,175,55,0.1))' }}
+      >
+        <defs>
+          <linearGradient id="bg-gold-gradient-m" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#D4AF37" />
+            <stop offset="50%" stopColor="#FFD700" />
+            <stop offset="100%" stopColor="#B8860B" />
+          </linearGradient>
+          <linearGradient id="bg-red-gradient-m" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#8A1C29" />
+            <stop offset="100%" stopColor="#D4AF37" />
+          </linearGradient>
+        </defs>
+
+        <motion.path
+          d="M 120 50 L 120 200 C 120 320, 160 350, 200 350 C 240 350, 280 320, 280 200 L 280 50"
+          fill="none"
+          stroke="url(#bg-gold-gradient-m)"
+          strokeWidth="1"
+          strokeLinecap="round"
+          initial={{ pathLength: 0, opacity: 0 }}
+          animate={{ pathLength: 1, opacity: 0.6 }}
+          transition={{ duration: 10, ease: "easeInOut", repeat: Infinity, repeatType: "mirror" }}
+        />
+
+        <motion.circle
+          cx="200"
+          cy="220"
+          r="16"
+          fill="none"
+          stroke="url(#bg-red-gradient-m)"
+          strokeWidth="1"
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 0.8 }}
+          transition={{ duration: 5, delay: 2, ease: "easeOut", repeat: Infinity, repeatType: "reverse" }}
         />
       </svg>
     </div>
