@@ -86,7 +86,7 @@ export default function FeaturedCategories() {
         const { getCategories, getProducts } = await import('@/lib/firebase-db');
         const [cats, products] = await withTimeout(
           Promise.all([getCategories(), getProducts()]),
-          4000
+          20000
         );
         const resolvedCats = cats.length > 0 ? cats : defaultCategories;
         const resolvedProducts = products.length > 0 ? products : mockProducts;

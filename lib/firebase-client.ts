@@ -23,8 +23,8 @@ if (!getApps().length) {
   app = initializeApp(firebaseConfig);
   // Use long-polling instead of WebChannel — the default streaming transport
   // reports "Database not found" in this environment, causing writes to hang.
-  // Explicitly specify the database ID instead of leaving it empty for "(default)"
-  db = initializeFirestore(app, { experimentalForceLongPolling: true }, databaseId);
+    // Use auto-detect for long polling instead of forcing it
+    db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true }, databaseId);
 } else {
   app = getApp();
   db = getFirestore(app, databaseId);

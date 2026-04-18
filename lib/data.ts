@@ -52,6 +52,25 @@ export const defaultCategories: CategoryItem[] = [
   { id: 'cat-008', name: 'Mangalsutra',  slug: 'mangalsutra',  order: 8, createdAt: '2024-01-01' },
 ];
 
+export interface ProductSummary {
+  id: string;
+  name: string;
+  category: string;
+  carat: 92 | 84;
+  tags: string[];
+  description: string;
+}
+
+export interface ConciergeResult {
+  matchIds: string[];
+  caption: string;
+  understood: {
+    category?: string;
+    carat?: 92 | 84;
+    vibe?: string;
+  };
+}
+
 export const categories = [
   'All',
   'Necklaces',
