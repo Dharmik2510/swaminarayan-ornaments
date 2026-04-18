@@ -27,13 +27,29 @@ export default function AdminToast() {
               animate={{ opacity: 1, x: 0, scale: 1 }}
               exit={{ opacity: 0, x: 24, scale: 0.97 }}
               transition={{ type: 'spring', stiffness: 400, damping: 32 }}
-              className="pointer-events-auto flex items-start gap-3 pl-4 pr-3 py-3 rounded-xl shadow-2xl min-w-[260px] max-w-xs overflow-hidden relative border"
+              className="pointer-events-auto flex items-start gap-3 pl-4 pr-3 py-3 rounded-xl shadow-2xl min-w-[280px] max-w-sm overflow-hidden relative border"
               style={{ background: 'var(--a-elevated)', borderColor: 'var(--a-border)' }}
             >
               {/* Colored left bar */}
               <span className={`absolute left-0 inset-y-0 w-[3px] rounded-r-full ${bar}`} />
+              {/* Countdown progress */}
+              <motion.span
+                key={`${t.id}-progress`}
+                initial={{ scaleX: 1 }}
+                animate={{ scaleX: 0 }}
+                transition={{ duration: t.duration / 1000, ease: 'linear' }}
+                className={`absolute left-0 bottom-0 h-[2px] ${bar} origin-left w-full opacity-60`}
+              />
               <Icon className={`w-4 h-4 mt-0.5 shrink-0 ${accent}`} />
               <p className="text-black/95 text-sm flex-1 leading-snug">{t.message}</p>
+              {t.action && (
+                <button
+                  onClick={() => { t.action!.onClick(); dismissToast(t.id); }}
+                  className={`shrink-0 text-xs font-semibold uppercase tracking-wider px-2 py-1 rounded-md hover:bg-black/5 transition-colors ${accent}`}
+                >
+                  {t.action.label}
+                </button>
+              )}
               <button
                 onClick={() => dismissToast(t.id)}
                 className="text-black/20 hover:text-black/95 transition-colors shrink-0 mt-0.5"

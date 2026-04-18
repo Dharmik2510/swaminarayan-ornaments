@@ -7,6 +7,8 @@ import { AdminProvider, useAdmin } from './AdminContext';
 import AdminSidebar from './AdminSidebar';
 import AdminToast from './AdminToast';
 import AdminConfirmModal from './AdminConfirmModal';
+import AdminCommandPalette from './AdminCommandPalette';
+import AdminHotkeys from './AdminHotkeys';
 import TilakSymbol from '../TilakSymbol';
 
 // ─── Login screen ─────────────────────────────────────────────────────────────
@@ -231,6 +233,8 @@ function InnerShell({ children }: { children: ReactNode }) {
       {/* Global overlays */}
       <AdminToast />
       <AdminConfirmModal />
+      <AdminCommandPalette />
+      <AdminHotkeys />
     </div>
   );
 }

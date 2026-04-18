@@ -1,9 +1,11 @@
 'use client';
 
-import { useCallback, useRef, useState, useEffect } from 'react';
+import { useCallback, useRef, useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, Trash2, Tag, X, Image as ImageIcon } from 'lucide-react';
-import { getMediaItems, addMediaItem, deleteMediaItem, updateMediaItemTags } from '@/lib/firebase';
+import { Upload, Trash2, Tag, X, Image as ImageIcon, Copy, Check } from 'lucide-react';
+import { getMediaItems, addMediaItem, deleteMediaItem, updateMediaItemTags, getProducts } from '@/lib/firebase';
+import type { Product } from '@/lib/data';
 import { compressImageToBlob } from '@/lib/firebase-upload';
 import { uploadImageToStorage } from '@/lib/firebase-upload';
 import type { MediaItem } from '@/lib/firebase';
@@ -17,7 +19,32 @@ export default function AdminMediaPage() {
   const [processing, setProcessing] = useState(false);
   const [tagInput, setTagInput] = useState<Record<string, string>>({});
   const [selected, setSelected] = useState<string | null>(null);
+  const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const pendingDeletes = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => () => {
+    Object.values(pendingDeletes.current).forEach(clearTimeout);
+  }, []);
+
+  useEffect(() => {
+    getProducts().then(setProducts).catch(() => {});
+  }, []);
+
+  // Map from image URL → products that reference it.
+  const usageByUrl = useMemo(() => {
+    const m = new Map<string, Product[]>();
+    for (const p of products) {
+      for (const url of p.images ?? []) {
+        const existing = m.get(url);
+        if (existing) existing.push(p);
+        else m.set(url, [p]);
+      }
+    }
+    return m;
+  }, [products]);
 
   useEffect(() => { getMediaItems().then(setItems).catch(err => console.error('[AdminMedia] Failed to load:', err.message)); }, []);
 
@@ -46,17 +73,49 @@ export default function AdminMediaPage() {
   };
 
   const handleDelete = async (item: MediaItem) => {
-    const ok = await confirm({
-      title: 'Delete image?',
-      message: `"${item.name}" will be permanently deleted from the media library.`,
-      confirmLabel: 'Delete',
-      variant: 'danger',
-    });
-    if (!ok) return;
-    await deleteMediaItem(item.id);
-    getMediaItems().then(setItems);
+    const usedBy = usageByUrl.get(item.url) ?? [];
+    if (usedBy.length > 0) {
+      const ok = await confirm({
+        title: 'Image is in use',
+        message: `"${item.name}" is used by ${usedBy.length} product${usedBy.length > 1 ? 's' : ''} (${usedBy.slice(0, 3).map(p => p.name).join(', ')}${usedBy.length > 3 ? '…' : ''}). Delete anyway?`,
+        confirmLabel: 'Delete anyway',
+        variant: 'danger',
+      });
+      if (!ok) return;
+    }
+
+    setHiddenIds(prev => new Set(prev).add(item.id));
     if (selected === item.id) setSelected(null);
-    toast('Image deleted.', 'success');
+
+    const timer = setTimeout(async () => {
+      delete pendingDeletes.current[item.id];
+      await deleteMediaItem(item.id);
+      getMediaItems().then(setItems);
+    }, 6500);
+    pendingDeletes.current[item.id] = timer;
+
+    toast(`"${item.name}" deleted.`, {
+      variant: 'success',
+      duration: 6500,
+      action: {
+        label: 'Undo',
+        onClick: () => {
+          clearTimeout(timer);
+          delete pendingDeletes.current[item.id];
+          setHiddenIds(prev => { const s = new Set(prev); s.delete(item.id); return s; });
+        },
+      },
+    });
+  };
+
+  const handleCopyUrl = async (item: MediaItem) => {
+    try {
+      await navigator.clipboard.writeText(item.url);
+      setCopiedId(item.id);
+      setTimeout(() => setCopiedId(cur => (cur === item.id ? null : cur)), 1500);
+    } catch {
+      toast('Could not copy URL.', 'error');
+    }
   };
 
   const handleAddTag = async (id: string) => {
@@ -121,7 +180,10 @@ export default function AdminMediaPage() {
           <div className="p-4">
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3">
               <AnimatePresence mode="popLayout">
-                {items.map(item => (
+                {items.filter(item => !hiddenIds.has(item.id)).map(item => {
+                  const justCopied = copiedId === item.id;
+                  const usage = usageByUrl.get(item.url)?.length ?? 0;
+                  return (
                   <motion.div
                     key={item.id}
                     layout
@@ -135,16 +197,43 @@ export default function AdminMediaPage() {
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={item.url} alt={item.name} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    {/* Usage badge */}
+                    <div className="absolute top-1.5 left-1.5 z-10">
+                      {usage > 0 ? (
+                        <span className="px-1.5 py-0.5 rounded-md bg-black/70 backdrop-blur-sm text-[10px] font-semibold text-[#D4AF37] tabular-nums">
+                          ×{usage}
+                        </span>
+                      ) : (
+                        <span className="px-1.5 py-0.5 rounded-md bg-amber-500/80 text-[10px] font-semibold text-black uppercase tracking-wider">
+                          Unused
+                        </span>
+                      )}
+                    </div>
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
+                      <button
+                        onClick={e => { e.stopPropagation(); handleCopyUrl(item); }}
+                        title={justCopied ? 'Copied!' : 'Copy URL'}
+                        className={`p-1.5 rounded-lg transition-colors ${
+                          justCopied
+                            ? 'bg-emerald-500/90'
+                            : 'bg-white/85 hover:bg-white'
+                        }`}
+                      >
+                        {justCopied
+                          ? <Check className="w-3 h-3 text-black" />
+                          : <Copy className="w-3 h-3 text-black" />}
+                      </button>
                       <button
                         onClick={e => { e.stopPropagation(); handleDelete(item); }}
-                        className="p-1.5 bg-red-500/80 rounded-lg hover:bg-red-500 transition-colors"
+                        title="Delete"
+                        className="p-1.5 bg-red-500/85 rounded-lg hover:bg-red-500 transition-colors"
                       >
                         <Trash2 className="w-3 h-3 text-black" />
                       </button>
                     </div>
                   </motion.div>
-                ))}
+                  );
+                })}
               </AnimatePresence>
             </div>
           </div>
@@ -173,9 +262,20 @@ export default function AdminMediaPage() {
                     <p className="text-black/55 text-xs mt-0.5">{formatBytes(selectedItem.size)} · {selectedItem.type}</p>
                     <p className="text-black/20 text-xs">{new Date(selectedItem.uploadedAt).toLocaleString()}</p>
                   </div>
-                  <button onClick={() => setSelected(null)} className="text-black/55 hover:text-black transition-colors">
-                    <X className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => handleCopyUrl(selectedItem)}
+                      title={copiedId === selectedItem.id ? 'Copied!' : 'Copy URL'}
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-black/[0.08] text-black/80 hover:text-black hover:border-black/20 text-[11px] transition-colors"
+                    >
+                      {copiedId === selectedItem.id
+                        ? <><Check className="w-3 h-3 text-emerald-500" /> Copied</>
+                        : <><Copy className="w-3 h-3" /> Copy URL</>}
+                    </button>
+                    <button onClick={() => setSelected(null)} className="text-black/55 hover:text-black transition-colors p-1">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Tags */}
@@ -207,6 +307,32 @@ export default function AdminMediaPage() {
                     </button>
                   </div>
                 </div>
+
+                {/* Usage */}
+                {(() => {
+                  const usedBy = usageByUrl.get(selectedItem.url) ?? [];
+                  return (
+                    <div className="space-y-2 pt-2 border-t border-black/[0.04]">
+                      <p className="text-[10px] tracking-[0.18em] uppercase text-black/45">
+                        {usedBy.length === 0 ? 'Not used anywhere' : `Used in ${usedBy.length} product${usedBy.length > 1 ? 's' : ''}`}
+                      </p>
+                      {usedBy.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {usedBy.slice(0, 8).map(p => (
+                            <Link
+                              key={p.id}
+                              href={`/admin/products/${p.id}`}
+                              className="px-2 py-0.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/25 text-[11px] text-black/80 hover:bg-[#D4AF37]/20 transition-colors"
+                            >
+                              {p.name}
+                            </Link>
+                          ))}
+                          {usedBy.length > 8 && <span className="text-[11px] text-black/40">+{usedBy.length - 8} more</span>}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           </motion.div>

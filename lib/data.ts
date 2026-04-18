@@ -17,6 +17,8 @@ export interface Product {
   updatedAt: string;
   seoTitle?: string;
   seoDescription?: string;
+  /** ISO timestamp when product was soft-deleted. Absent means live. */
+  deletedAt?: string;
   /** @deprecated kept for display-only on existing products */
   priceRange?: string;
 }

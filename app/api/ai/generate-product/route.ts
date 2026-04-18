@@ -1,9 +1,18 @@
 import type { NextRequest } from 'next/server';
 
+type Tone = 'traditional' | 'modern' | 'minimal';
+
 type Body = {
   imageUrl: string;
   categories?: string[];
   carat?: 92 | 84;
+  tone?: Tone;
+};
+
+const TONE_GUIDANCE: Record<Tone, string> = {
+  traditional: 'Voice: warm, heritage-forward. Invoke craftsmanship, temple motifs, bridal legacy, ceremonial wear. Use evocative adjectives (majestic, regal, ancestral). Sanskrit/Hindi loanwords welcome where accurate.',
+  modern:      'Voice: contemporary, confident, clean. Focus on wearability for modern occasions, layering, everyday elegance. Avoid archaic flourish. Use active verbs; keep sentences tight.',
+  minimal:     'Voice: quiet luxury, restrained. Short sentences. No superlatives. Focus on silhouette, material, weight. No emojis or exclamations.',
 };
 
 type Generated = {
@@ -50,8 +59,11 @@ export async function POST(request: NextRequest) {
     ? body.categories
     : ['Necklaces', 'Bangles', 'Earrings', 'Rings', 'Chains', 'Bracelets', 'Pendants', 'Mangalsutra'];
 
+  const tone: Tone = body.tone ?? 'traditional';
   const userText = `Categories to choose from: ${categories.join(', ')}
 Carat: ${body.carat ?? 92} (${body.carat === 84 ? '18K' : '22K'}) gold
+
+${TONE_GUIDANCE[tone]}
 
 Generate metadata for this product.`;
 

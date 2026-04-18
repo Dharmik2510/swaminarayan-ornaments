@@ -2,13 +2,15 @@
 
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Search, Trash2, Edit2, Copy, Package,
   ChevronDown, ChevronUp, ChevronsUpDown, Check,
-  LayoutGrid, List, Sparkles,
+  LayoutGrid, List, Sparkles, SlidersHorizontal, Bookmark, X as XIcon,
 } from 'lucide-react';
 import StatusBadge from '@/components/admin/StatusBadge';
+import AdminBulkEditDrawer from '@/components/admin/AdminBulkEditDrawer';
 import {
   getProducts,
   deleteProductsBulk,
@@ -33,10 +35,39 @@ const STATUS_OPTIONS: Array<{ value: ProductStatus | 'all'; label: string }> = [
 type SortField = 'name' | 'createdAt' | 'category' | 'status';
 type SortDir   = 'asc' | 'desc';
 
+type AdvancedFilters = {
+  featured: 'all' | 'yes' | 'no';
+  missingImage: boolean;
+  missingDescription: boolean;
+  missingSeo: boolean;
+  createdAfter: string; // ISO date (yyyy-mm-dd) or ''
+};
+
+const DEFAULT_ADVANCED: AdvancedFilters = {
+  featured: 'all',
+  missingImage: false,
+  missingDescription: false,
+  missingSeo: false,
+  createdAfter: '',
+};
+
+type SavedView = {
+  id: string;
+  name: string;
+  search: string;
+  statusFilter: ProductStatus | 'all';
+  categoryFilter: string;
+  advanced: AdvancedFilters;
+};
+
+const SAVED_VIEWS_KEY = 'admin:savedViews';
+
 export default function AdminProductsPage() {
   const { toast, confirm } = useAdmin();
+  const searchParams = useSearchParams();
 
   const [products,       setProducts]      = useState<Product[]>([]);
+  const [productsLoaded, setProductsLoaded]= useState(false);
   const [categoryNames,  setCategoryNames] = useState<string[]>([]);
   const [search,         setSearch]        = useState('');
   const deferredSearch = useDeferredValue(search);
@@ -48,6 +79,88 @@ export default function AdminProductsPage() {
   const [sortDir,        setSortDir]       = useState<SortDir>('desc');
   const [view,           setView]          = useState<'table' | 'grid'>('table');
   const [bulkAction,     setBulkAction]    = useState('');
+  const [hiddenIds,      setHiddenIds]     = useState<Set<string>>(new Set());
+  const [bulkDrawerOpen, setBulkDrawerOpen]= useState(false);
+  const [advanced,       setAdvanced]      = useState<AdvancedFilters>(DEFAULT_ADVANCED);
+  const [showAdvanced,   setShowAdvanced]  = useState(false);
+  const [savedViews,     setSavedViews]    = useState<SavedView[]>([]);
+  const [activeViewId,   setActiveViewId]  = useState<string | null>(null);
+
+  // Load saved views once.
+  useEffect(() => {
+    try {
+      const raw = typeof window !== 'undefined' ? localStorage.getItem(SAVED_VIEWS_KEY) : null;
+      if (raw) setSavedViews(JSON.parse(raw) as SavedView[]);
+    } catch { /* ignore parse errors */ }
+  }, []);
+
+  // Apply filters from URL query params on mount (dashboard deep-links).
+  useEffect(() => {
+    const next: Partial<AdvancedFilters> = {};
+    let touched = false;
+    let statusTouched: ProductStatus | 'all' | null = null;
+    if (searchParams.get('missingImage') === '1')       { next.missingImage = true; touched = true; }
+    if (searchParams.get('missingDescription') === '1') { next.missingDescription = true; touched = true; }
+    if (searchParams.get('missingSeo') === '1')         { next.missingSeo = true; touched = true; }
+    if (searchParams.get('featured') === 'yes')         { next.featured = 'yes'; touched = true; }
+    if (searchParams.get('featured') === 'no')          { next.featured = 'no'; touched = true; }
+    const statusQ = searchParams.get('status');
+    if (statusQ && ['active', 'draft', 'archived'].includes(statusQ)) {
+      statusTouched = statusQ as ProductStatus;
+    }
+    if (touched) {
+      setAdvanced(a => ({ ...a, ...next }));
+      setShowAdvanced(true);
+    }
+    if (statusTouched) setStatusFilter(statusTouched);
+  }, [searchParams]);
+
+  const persistViews = (views: SavedView[]) => {
+    setSavedViews(views);
+    try { localStorage.setItem(SAVED_VIEWS_KEY, JSON.stringify(views)); } catch {}
+  };
+
+  const saveCurrentAsView = () => {
+    const name = window.prompt('Name this view', 'My filter');
+    if (!name) return;
+    const view: SavedView = {
+      id: `view-${Date.now()}`,
+      name,
+      search, statusFilter, categoryFilter, advanced,
+    };
+    persistViews([view, ...savedViews].slice(0, 10));
+    setActiveViewId(view.id);
+  };
+
+  const applyView = (v: SavedView) => {
+    setSearch(v.search);
+    setStatusFilter(v.statusFilter);
+    setCategoryFilter(v.categoryFilter);
+    setAdvanced(v.advanced);
+    setActiveViewId(v.id);
+    setPage(1);
+  };
+
+  const deleteView = (id: string) => {
+    persistViews(savedViews.filter(v => v.id !== id));
+    if (activeViewId === id) setActiveViewId(null);
+  };
+
+  const resetFilters = () => {
+    setSearch('');
+    setStatusFilter('all');
+    setCategoryFilter('all');
+    setAdvanced(DEFAULT_ADVANCED);
+    setActiveViewId(null);
+    setPage(1);
+  };
+
+  const advancedActiveCount =
+    (advanced.featured !== 'all' ? 1 : 0) +
+    (advanced.missingImage ? 1 : 0) +
+    (advanced.missingDescription ? 1 : 0) +
+    (advanced.missingSeo ? 1 : 0) +
+    (advanced.createdAfter ? 1 : 0);
 
   const handleSearch = (val: string) => { setSearch(val); setPage(1); };
 
@@ -58,6 +171,8 @@ export default function AdminProductsPage() {
       setSelected(new Set());
     } catch (err) {
       console.error('[AdminProducts] Failed to load:', (err as Error).message);
+    } finally {
+      setProductsLoaded(true);
     }
   }, []);
 
@@ -68,7 +183,7 @@ export default function AdminProductsPage() {
 
   // ── Filtering & sorting ──────────────────────────────────────────────────
   const filtered = useMemo(() => {
-    let list = [...products];
+    let list = products.filter(p => !hiddenIds.has(p.id));
 
     if (deferredSearch) {
       const q = deferredSearch.toLowerCase();
@@ -82,6 +197,16 @@ export default function AdminProductsPage() {
     if (statusFilter !== 'all')   list = list.filter(p => p.status === statusFilter);
     if (categoryFilter !== 'all') list = list.filter(p => p.category === categoryFilter);
 
+    if (advanced.featured === 'yes') list = list.filter(p => p.featured);
+    else if (advanced.featured === 'no') list = list.filter(p => !p.featured);
+    if (advanced.missingImage) list = list.filter(p => !p.images || p.images.length === 0);
+    if (advanced.missingDescription) list = list.filter(p => !p.description?.trim());
+    if (advanced.missingSeo) list = list.filter(p => !p.seoTitle?.trim() || !p.seoDescription?.trim());
+    if (advanced.createdAfter) {
+      const cutoff = new Date(advanced.createdAfter).getTime();
+      list = list.filter(p => new Date(p.createdAt).getTime() >= cutoff);
+    }
+
     list.sort((a, b) => {
       let cmp = 0;
       if (sortField === 'name')      cmp = a.name.localeCompare(b.name);
@@ -92,7 +217,7 @@ export default function AdminProductsPage() {
     });
 
     return list;
-  }, [products, deferredSearch, statusFilter, categoryFilter, sortField, sortDir]);
+  }, [products, hiddenIds, deferredSearch, statusFilter, categoryFilter, advanced, sortField, sortDir]);
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -130,22 +255,65 @@ export default function AdminProductsPage() {
       : <ChevronDown className="w-3 h-3 text-[#D4AF37]" />;
   };
 
+  // ── Pending deletes (optimistic undo) ─────────────────────────────────────
+  const pendingDeletes = useRef<Record<string, { product: Product; timer: ReturnType<typeof setTimeout> }>>({});
+
+  useEffect(() => () => {
+    Object.values(pendingDeletes.current).forEach(p => clearTimeout(p.timer));
+  }, []);
+
+  const scheduleDelete = useCallback((items: Product[]) => {
+    if (!items.length) return;
+    const ids = items.map(p => p.id);
+    setHiddenIds(prev => { const s = new Set(prev); ids.forEach(i => s.add(i)); return s; });
+    setSelected(new Set());
+
+    const timer = setTimeout(async () => {
+      ids.forEach(id => { delete pendingDeletes.current[id]; });
+      try {
+        if (ids.length === 1) await deleteProduct(ids[0]);
+        else await deleteProductsBulk(ids);
+      } catch {
+        toast('Delete failed. Reloading.', 'error');
+      }
+      refresh();
+    }, 6500);
+
+    items.forEach(p => { pendingDeletes.current[p.id] = { product: p, timer }; });
+
+    const label = items.length === 1 ? `"${items[0].name}" deleted.` : `${items.length} products deleted.`;
+    toast(label, {
+      variant: 'success',
+      duration: 6500,
+      action: {
+        label: 'Undo',
+        onClick: () => {
+          clearTimeout(timer);
+          ids.forEach(id => { delete pendingDeletes.current[id]; });
+          setHiddenIds(prev => { const s = new Set(prev); ids.forEach(i => s.delete(i)); return s; });
+        },
+      },
+    });
+  }, [refresh, toast]);
+
   // ── Bulk actions ──────────────────────────────────────────────────────────
   const applyBulkAction = async () => {
     const ids = [...selected];
     if (!ids.length) return;
 
     if (bulkAction === 'delete') {
-      const ok = await confirm({
-        title: 'Delete products?',
-        message: `This will permanently delete ${ids.length} product${ids.length > 1 ? 's' : ''}. This cannot be undone.`,
-        confirmLabel: 'Delete',
-        variant: 'danger',
-      });
-      if (!ok) return;
-      deleteProductsBulk(ids);
-      toast(`Deleted ${ids.length} product${ids.length > 1 ? 's' : ''}.`, 'success');
-      refresh();
+      // For larger bulk deletes keep the confirm as a safety rail.
+      if (ids.length > 5) {
+        const ok = await confirm({
+          title: 'Delete products?',
+          message: `This will delete ${ids.length} products.`,
+          confirmLabel: `Delete ${ids.length}`,
+          variant: 'danger',
+        });
+        if (!ok) return;
+      }
+      const toDelete = products.filter(p => ids.includes(p.id));
+      scheduleDelete(toDelete);
       return;
     }
 
@@ -173,17 +341,9 @@ export default function AdminProductsPage() {
     refresh();
   };
 
-  const handleDelete = async (id: string, name: string) => {
-    const ok = await confirm({
-      title: 'Delete product?',
-      message: `"${name}" will be permanently deleted.`,
-      confirmLabel: 'Delete',
-      variant: 'danger',
-    });
-    if (!ok) return;
-    deleteProduct(id);
-    toast(`"${name}" deleted.`, 'success');
-    refresh();
+  const handleDelete = (id: string) => {
+    const p = products.find(x => x.id === id);
+    if (p) scheduleDelete([p]);
   };
 
   return (
@@ -250,6 +410,25 @@ export default function AdminProductsPage() {
           {STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
 
+        {/* Advanced filters toggle */}
+        <button
+          onClick={() => setShowAdvanced(s => !s)}
+          className={`relative flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm transition-colors ${
+            showAdvanced || advancedActiveCount > 0
+              ? 'bg-[#D4AF37]/10 border-[#D4AF37]/40 text-black'
+              : 'border-black/[0.08] text-black/70 hover:text-black'
+          }`}
+          title="Advanced filters"
+        >
+          <SlidersHorizontal className="w-4 h-4" />
+          Filters
+          {advancedActiveCount > 0 && (
+            <span className="ml-1 text-[10px] font-semibold bg-[#D4AF37] text-black rounded-full px-1.5 py-0.5 leading-none">
+              {advancedActiveCount}
+            </span>
+          )}
+        </button>
+
         {/* View toggle */}
         <div className="flex rounded-xl border shadow-sm border-black/[0.08] overflow-hidden">
           <button
@@ -266,6 +445,99 @@ export default function AdminProductsPage() {
           </button>
         </div>
       </div>
+
+      {/* Saved views strip */}
+      <div className="flex flex-wrap items-center gap-2">
+        {savedViews.map(v => (
+          <div key={v.id} className={`flex items-center gap-1 rounded-full border text-xs transition-colors ${
+            activeViewId === v.id
+              ? 'bg-[#D4AF37]/15 border-[#D4AF37]/40 text-black'
+              : 'border-black/[0.08] text-black/70 hover:text-black'
+          }`}>
+            <button onClick={() => applyView(v)} className="pl-3 py-1 flex items-center gap-1.5">
+              <Bookmark className="w-3 h-3" />
+              {v.name}
+            </button>
+            <button onClick={() => deleteView(v.id)} title="Delete view" className="pr-2 pl-0.5 py-1 text-black/40 hover:text-red-500">
+              <XIcon className="w-2.5 h-2.5" />
+            </button>
+          </div>
+        ))}
+        <button
+          onClick={saveCurrentAsView}
+          className="text-xs text-black/55 hover:text-black border border-dashed border-black/15 rounded-full px-3 py-1 hover:border-[#D4AF37]/40"
+          title="Save current filter combination"
+        >
+          + Save view
+        </button>
+        {(advancedActiveCount > 0 || statusFilter !== 'all' || categoryFilter !== 'all' || search) && (
+          <button onClick={resetFilters} className="text-xs text-black/55 hover:text-black underline">
+            Reset
+          </button>
+        )}
+      </div>
+
+      {/* Advanced filter panel */}
+      <AnimatePresence>
+        {showAdvanced && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            className="rounded-xl border p-4 grid grid-cols-2 md:grid-cols-5 gap-4"
+            style={{ background: 'var(--a-surface)', borderColor: 'var(--a-border)' }}
+          >
+            <div className="space-y-1">
+              <label className="block text-[10px] tracking-[0.18em] uppercase text-black/55">Featured</label>
+              <select
+                value={advanced.featured}
+                onChange={e => { setAdvanced(a => ({ ...a, featured: e.target.value as AdvancedFilters['featured'] })); setActiveViewId(null); setPage(1); }}
+                className="w-full bg-black/[0.03] border rounded-lg px-2 py-1.5 text-sm outline-none [border-color:var(--a-border)]"
+              >
+                <option value="all">All</option>
+                <option value="yes">Featured only</option>
+                <option value="no">Not featured</option>
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label className="block text-[10px] tracking-[0.18em] uppercase text-black/55">Created after</label>
+              <input
+                type="date"
+                value={advanced.createdAfter}
+                onChange={e => { setAdvanced(a => ({ ...a, createdAfter: e.target.value })); setActiveViewId(null); setPage(1); }}
+                className="w-full bg-black/[0.03] border rounded-lg px-2 py-1.5 text-sm outline-none [border-color:var(--a-border)]"
+              />
+            </div>
+            <label className="flex items-center gap-2 text-sm text-black/80 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={advanced.missingImage}
+                onChange={e => { setAdvanced(a => ({ ...a, missingImage: e.target.checked })); setActiveViewId(null); setPage(1); }}
+                className="accent-[#D4AF37]"
+              />
+              Missing images
+            </label>
+            <label className="flex items-center gap-2 text-sm text-black/80 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={advanced.missingDescription}
+                onChange={e => { setAdvanced(a => ({ ...a, missingDescription: e.target.checked })); setActiveViewId(null); setPage(1); }}
+                className="accent-[#D4AF37]"
+              />
+              Missing description
+            </label>
+            <label className="flex items-center gap-2 text-sm text-black/80 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={advanced.missingSeo}
+                onChange={e => { setAdvanced(a => ({ ...a, missingSeo: e.target.checked })); setActiveViewId(null); setPage(1); }}
+                className="accent-[#D4AF37]"
+              />
+              Missing SEO fields
+            </label>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Bulk action bar */}
       <AnimatePresence>
@@ -306,6 +578,13 @@ export default function AdminProductsPage() {
                 className="px-3 py-1.5 rounded-lg bg-[#D4AF37] text-black text-sm font-medium disabled:opacity-40 hover:bg-[#FFD700] transition-colors"
               >
                 Apply
+              </button>
+              <button
+                onClick={() => setBulkDrawerOpen(true)}
+                className="px-3 py-1.5 rounded-lg border border-black/[0.1] text-black/90 hover:text-black text-sm transition-colors"
+                title="Edit tags, featured, carat, description for all selected"
+              >
+                More edits…
               </button>
             </div>
             <button
@@ -359,7 +638,24 @@ export default function AdminProductsPage() {
               </thead>
               <tbody>
                 <AnimatePresence mode="popLayout">
-                  {paginated.length === 0 ? (
+                  {!productsLoaded && paginated.length === 0 ? (
+                    Array.from({ length: 6 }).map((_, i) => (
+                      <tr key={`skel-${i}`} className="border-b border-black/[0.03] animate-pulse">
+                        <td className="px-4 py-3"><div className="w-4 h-4 rounded bg-black/[0.06]" /></td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-lg bg-black/[0.06]" />
+                            <div className="h-3 w-40 bg-black/[0.06] rounded" />
+                          </div>
+                        </td>
+                        <td className="px-4 py-3"><div className="h-3 w-20 bg-black/[0.06] rounded" /></td>
+                        <td className="px-4 py-3"><div className="h-3 w-10 bg-black/[0.06] rounded" /></td>
+                        <td className="px-4 py-3"><div className="h-4 w-14 bg-black/[0.06] rounded-full" /></td>
+                        <td className="px-4 py-3"><div className="h-3 w-16 bg-black/[0.06] rounded" /></td>
+                        <td className="px-4 py-3"><div className="h-3 w-16 bg-black/[0.06] rounded ml-auto" /></td>
+                      </tr>
+                    ))
+                  ) : paginated.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="px-4 py-16 text-center text-black/55">
                         {search || statusFilter !== 'all' || categoryFilter !== 'all'
@@ -424,7 +720,7 @@ export default function AdminProductsPage() {
                               <Copy className="w-3.5 h-3.5" />
                             </button>
                             <button
-                              onClick={() => handleDelete(p.id, p.name)}
+                              onClick={() => handleDelete(p.id)}
                               className="p-1.5 rounded-lg text-black/95 hover:text-red-400 hover:bg-red-400/[0.08] transition-colors"
                               title="Delete"
                             >
@@ -500,7 +796,7 @@ export default function AdminProductsPage() {
                         <Link href={`/admin/products/${p.id}`} className="p-1 text-black/55 hover:text-black transition-colors">
                           <Edit2 className="w-3 h-3" />
                         </Link>
-                        <button onClick={() => handleDelete(p.id, p.name)} className="p-1 text-black/55 hover:text-red-400 transition-colors">
+                        <button onClick={() => handleDelete(p.id)} className="p-1 text-black/55 hover:text-red-400 transition-colors">
                           <Trash2 className="w-3 h-3" />
                         </button>
                       </div>
@@ -512,6 +808,16 @@ export default function AdminProductsPage() {
           </AnimatePresence>
         </div>
       )}
+
+      {/* Bulk edit drawer */}
+      <AdminBulkEditDrawer
+        open={bulkDrawerOpen}
+        count={selected.size}
+        ids={[...selected]}
+        onClose={() => setBulkDrawerOpen(false)}
+        onApplied={refresh}
+        toast={toast}
+      />
 
       {/* Pagination */}
       {totalPages > 1 && (

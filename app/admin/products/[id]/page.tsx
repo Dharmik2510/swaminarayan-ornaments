@@ -14,7 +14,7 @@ export default function EditProductPage({
   const getProductPromise = getProduct(id);
   const product = use(getProductPromise);
 
-  if (!product) notFound();
+  if (!product || product.deletedAt) notFound();
 
   return <AdminProductForm product={product} />;
 }

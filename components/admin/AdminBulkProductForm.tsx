@@ -63,9 +63,11 @@ export default function AdminBulkProductForm() {
   const [status, setStatus] = useState<ProductStatus>('active');
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [aiRunning, setAiRunning] = useState(false);
+  const [aiProgress, setAiProgress] = useState<{ done: number; total: number } | null>(null);
   const [publishing, setPublishing] = useState(false);
   const [bulkUploading, setBulkUploading] = useState(false);
   const [draggingOver, setDraggingOver] = useState(false);
+  const [summary, setSummary] = useState<{ ok: number; failed: string[] } | null>(null);
 
   useEffect(() => {
     getCategories().then(cats => {
@@ -178,8 +180,15 @@ export default function AdminBulkProductForm() {
       return;
     }
     setAiRunning(true);
-    await runPool(targets, AI_CONCURRENCY, generateOne);
+    setAiProgress({ done: 0, total: targets.length });
+    let done = 0;
+    await runPool(targets, AI_CONCURRENCY, async (d) => {
+      await generateOne(d);
+      done += 1;
+      setAiProgress({ done, total: targets.length });
+    });
     setAiRunning(false);
+    setTimeout(() => setAiProgress(null), 1500);
     toast('AI drafts ready. Review before publishing.', 'success');
   };
 
@@ -195,13 +204,15 @@ export default function AdminBulkProductForm() {
     }
     setPublishing(true);
     let ok = 0;
+    const failed: string[] = [];
     for (let i = 0; i < ready.length; i++) {
       const d = ready[i];
       update(d.id, { saveStatus: 'saving' });
       const fallbackName = `${category} #${Date.now().toString(36).slice(-4)}-${i + 1}`;
+      const finalName = d.name.trim() || fallbackName;
       try {
         await addProduct({
-          name: d.name.trim() || fallbackName,
+          name: finalName,
           description: d.description.trim() || '',
           carat,
           category,
@@ -216,11 +227,11 @@ export default function AdminBulkProductForm() {
         ok++;
       } catch {
         update(d.id, { saveStatus: 'error' });
+        failed.push(finalName);
       }
     }
     setPublishing(false);
-    toast(`Published ${ok} of ${ready.length} product${ready.length > 1 ? 's' : ''}.`, ok ? 'success' : 'error');
-    if (ok === ready.length) router.push('/admin/products');
+    setSummary({ ok, failed });
   };
 
   const readyCount = drafts.filter(d => d.images.length > 0).length;
@@ -268,6 +279,81 @@ export default function AdminBulkProductForm() {
           </button>
         </div>
       </div>
+
+      {/* AI progress */}
+      <AnimatePresence>
+        {aiProgress && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="rounded-xl border px-4 py-3 flex items-center gap-3"
+            style={{ background: 'var(--a-surface)', borderColor: 'var(--a-border)' }}
+          >
+            <Sparkles className="w-4 h-4 text-[#D4AF37]" />
+            <div className="flex-1">
+              <div className="flex items-center justify-between text-[11px] text-black/60 mb-1.5">
+                <span>Generating AI drafts</span>
+                <span className="tabular-nums">{aiProgress.done} / {aiProgress.total}</span>
+              </div>
+              <div className="h-1.5 rounded-full bg-black/[0.06] overflow-hidden">
+                <motion.div
+                  className="h-full bg-[#D4AF37]"
+                  animate={{ width: `${(aiProgress.done / aiProgress.total) * 100}%` }}
+                  transition={{ type: 'spring', stiffness: 140, damping: 24 }}
+                />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Post-publish summary */}
+      <AnimatePresence>
+        {summary && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className={`rounded-xl border px-4 py-3 ${
+              summary.failed.length === 0
+                ? 'border-emerald-500/30 bg-emerald-500/5'
+                : 'border-amber-500/30 bg-amber-500/5'
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              <div className="flex-1">
+                <p className="text-sm text-black/90 font-medium">
+                  {summary.failed.length === 0
+                    ? `Published ${summary.ok} product${summary.ok > 1 ? 's' : ''} successfully.`
+                    : `Published ${summary.ok} of ${summary.ok + summary.failed.length}. ${summary.failed.length} failed.`}
+                </p>
+                {summary.failed.length > 0 && (
+                  <ul className="mt-1.5 text-[11px] text-amber-700 list-disc pl-4 space-y-0.5">
+                    {summary.failed.map(n => <li key={n}>{n}</li>)}
+                  </ul>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => router.push('/admin/products')}
+                  className="px-3 py-1.5 rounded-lg bg-[#D4AF37] text-black text-xs font-medium hover:bg-[#FFD700] transition-colors"
+                >
+                  Go to products
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSummary(null)}
+                  className="px-3 py-1.5 rounded-lg border border-black/10 text-black/70 text-xs hover:text-black transition-colors"
+                >
+                  Keep editing
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Shared settings */}
       <div className="rounded-2xl p-5 border grid grid-cols-1 md:grid-cols-3 gap-4" style={{ background: 'var(--a-surface)', borderColor: 'var(--a-border)' }}>
