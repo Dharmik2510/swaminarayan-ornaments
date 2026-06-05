@@ -1,36 +1,39 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Swaminarayan Ornaments — Digital Showroom
 
-## Getting Started
+Welcome to the **Swaminarayan Ornaments** digital experience. This platform serves as a high-end, luxury digital showroom, capturing the essence of heritage and craftsmanship without the transactional elements of a standard e-commerce store. 
 
-First, run the development server:
+## Overview
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Swaminarayan Ornaments is designed to provide a premium, brand-focused viewing experience. Customers can browse curated collections of exquisite jewelry, explore intricate details, and appreciate the craftsmanship in a digital environment that reflects the brand's sophisticated identity (emerald green and cream color palette with custom Swaminarayan Tilak motifs).
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Features & Functionalities for Visitors (Users)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+As a visitor to the digital showroom, you have access to the following features:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 1. Immersive Browsing Experience
+- **Luxury Hero Section:** A split-layout design featuring high-resolution imagery and elegant typography to welcome you to the showroom.
+- **Dynamic Animations:** Smooth transitions and micro-animations provide a responsive, alive interface.
+- **Showroom Focus:** The interface is free of disruptive buy buttons, pricing, and shopping carts, allowing you to focus entirely on the artistry of the jewelry.
 
-## Learn More
+### 2. Exploring Collections & Categories
+- **Categorized Catalogs:** Browse jewelry segmented by types such as Necklaces, Rings, Bangles, and Custom Pieces.
+- **Featured Products:** Discover highlighted and seasonal highlighted pieces curated by the administrators directly on the homepage.
+- **Smooth Navigation:** Seamlessly move between different categories using the refined navigation system.
 
-To learn more about Next.js, take a look at the following resources:
+### 3. Detailed Product Views
+- **High-Quality Imagery:** View multiple angles and details of each piece.
+- **Craftsmanship Details:** Read rich descriptions detailing the materials, design inspirations, and occasion suitability for each piece.
+- **Metadata Details:** Explore tags, purity information (e.g., 22K/18K Gold equivalent), and distinct identifiers.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Usage Steps for Visitors
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. **Visit the Homepage:** Land on the main URL to see the latest featured products and brand messaging.
+2. **Navigate Collections:** Use the header navigation to select specific jewelry categories.
+3. **View Product Details:** Click on any jewelry piece to open its dedicated view, browsing through its image gallery and reading its background story.
+4. **Experience the Brand:** Enjoy the seamless, high-performance interface (powered by Next.js and Tailwind/Vanilla CSS) that prioritizes visual excellence.
 
-## Deploy on Vercel
+## Technical Foundation
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Built with **Next.js** and **React** for optimal performance and SEO.
+- Styling blends **Vanilla CSS** and customized utility patterns to ensure strict adherence to the brand's aesthetic.
+- Data is dynamically fetched from a real-time **Firebase Firestore** backend.

@@ -39,6 +39,18 @@ function Field({ label, children, hint }: { label: string; children: React.React
   );
 }
 
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-2xl p-6 space-y-5 border" style={{ background: 'var(--a-surface)', borderColor: 'var(--a-border)' }}>
+      <h3 className="text-[10px] tracking-[0.22em] uppercase pb-3 border-b"
+        style={{ color: 'var(--a-muted)', borderColor: 'var(--a-border)' }}>
+        {title}
+      </h3>
+      {children}
+    </div>
+  );
+}
+
 // ─── Input styles ─────────────────────────────────────────────────────────────
 const inputCls = `
   w-full bg-white/[0.03] border rounded-xl px-4 py-2.5 text-white/85 text-sm
@@ -138,15 +150,7 @@ export default function AdminProductForm({ product }: Props) {
     }
   };
 
-  const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <div className="rounded-2xl p-6 space-y-5 border" style={{ background: 'var(--a-surface)', borderColor: 'var(--a-border)' }}>
-      <h3 className="text-[10px] tracking-[0.22em] uppercase pb-3 border-b"
-        style={{ color: 'var(--a-muted)', borderColor: 'var(--a-border)' }}>
-        {title}
-      </h3>
-      {children}
-    </div>
-  );
+
 
   return (
     <form onSubmit={(e) => handleSubmit(e)} className="space-y-6 max-w-5xl">

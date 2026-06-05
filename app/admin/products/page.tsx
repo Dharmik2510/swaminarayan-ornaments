@@ -52,14 +52,18 @@ export default function AdminProductsPage() {
   const handleSearch = (val: string) => { setSearch(val); setPage(1); };
 
   const refresh = useCallback(async () => {
-    const data = await getProducts();
-    setProducts(data);
-    setSelected(new Set());
+    try {
+      const data = await getProducts();
+      setProducts(data);
+      setSelected(new Set());
+    } catch (err) {
+      console.error('[AdminProducts] Failed to load:', (err as Error).message);
+    }
   }, []);
 
   useEffect(() => {
     refresh();
-    getCategories().then(cats => setCategoryNames(cats.map(c => c.name)));
+    getCategories().then(cats => setCategoryNames(cats.map(c => c.name))).catch(() => {});
   }, [refresh]);
 
   // ── Filtering & sorting ──────────────────────────────────────────────────
