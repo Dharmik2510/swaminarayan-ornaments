@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -34,12 +34,16 @@ const gradients = [
 export default function CollectionSection({ onSelectProduct }: CollectionSectionProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [conciergeIds, setConciergeIds] = useState<string[] | null>(null);
+  const [conciergeCaption, setConciergeCaption] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadProducts() {
       try {
         const { getProducts } = await import('@/lib/firebase-db');
-        const data = await withTimeout(getProducts(), 4000);
+        // Increased timeout to 20s. In development, Firestore WebChannel reconnects
+        // can take roughly 5-10 seconds after a hot reload drops the stream.
+        const data = await withTimeout(getProducts(), 20000);
         const resolved = data.length > 0 ? data : mockProducts;
         setProducts(resolved.filter(p => p.status === 'active'));
       } catch {

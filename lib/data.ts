@@ -17,6 +17,8 @@ export interface Product {
   updatedAt: string;
   seoTitle?: string;
   seoDescription?: string;
+  /** ISO timestamp when product was soft-deleted. Absent means live. */
+  deletedAt?: string;
   /** @deprecated kept for display-only on existing products */
   priceRange?: string;
 }
@@ -51,6 +53,25 @@ export const defaultCategories: CategoryItem[] = [
   { id: 'cat-007', name: 'Pendants',     slug: 'pendants',     order: 7, createdAt: '2024-01-01' },
   { id: 'cat-008', name: 'Mangalsutra',  slug: 'mangalsutra',  order: 8, createdAt: '2024-01-01' },
 ];
+
+export interface ProductSummary {
+  id: string;
+  name: string;
+  category: string;
+  carat: 92 | 84;
+  tags: string[];
+  description: string;
+}
+
+export interface ConciergeResult {
+  matchIds: string[];
+  caption: string;
+  understood: {
+    category?: string;
+    carat?: 92 | 84;
+    vibe?: string;
+  };
+}
 
 export const categories = [
   'All',

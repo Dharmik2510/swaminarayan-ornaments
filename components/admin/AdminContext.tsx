@@ -14,10 +14,23 @@ import { auth } from '@/lib/firebase-client';
 
 export type ToastVariant = 'success' | 'error' | 'info' | 'warning';
 
+export interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
+
 export interface Toast {
   id: string;
   message: string;
   variant: ToastVariant;
+  action?: ToastAction;
+  duration: number;
+}
+
+export interface ToastOptions {
+  variant?: ToastVariant;
+  action?: ToastAction;
+  duration?: number;
 }
 
 interface ConfirmState {
@@ -36,7 +49,7 @@ interface AdminCtx {
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   toasts: Toast[];
-  toast: (message: string, variant?: ToastVariant) => void;
+  toast: (message: string, variantOrOptions?: ToastVariant | ToastOptions) => string;
   dismissToast: (id: string) => void;
   confirm: (opts: { title?: string; message: string; confirmLabel?: string; variant?: 'danger' | 'default' }) => Promise<boolean>;
   confirmState: ConfirmState;
@@ -80,13 +93,19 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     return () => { Object.values(toastTimers.current).forEach(clearTimeout); };
   }, []);
 
-  const toast = useCallback((message: string, variant: ToastVariant = 'success') => {
+  const toast = useCallback((message: string, variantOrOptions: ToastVariant | ToastOptions = 'success'): string => {
+    const opts: ToastOptions = typeof variantOrOptions === 'string'
+      ? { variant: variantOrOptions }
+      : variantOrOptions;
+    const variant = opts.variant ?? 'success';
+    const duration = opts.duration ?? (opts.action ? 7000 : 4000);
     const id = `toast-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-    setToasts(prev => [...prev, { id, message, variant }]);
+    setToasts(prev => [...prev, { id, message, variant, action: opts.action, duration }]);
     toastTimers.current[id] = setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id));
       delete toastTimers.current[id];
-    }, 4000);
+    }, duration);
+    return id;
   }, []);
 
   const dismissToast = useCallback((id: string) => {

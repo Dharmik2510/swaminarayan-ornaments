@@ -112,8 +112,8 @@ export default function AdminCategoriesPage() {
   };
 
   const inputCls = `
-    bg-white/[0.03] border rounded-lg px-3 py-2 text-white/85 text-sm
-    placeholder:text-white/18 outline-none focus:border-[rgba(212,175,55,0.3)] transition-colors w-full
+    bg-black/[0.03] border rounded-lg px-3 py-2 text-black/85 text-sm
+    placeholder:text-black/18 outline-none focus:border-[rgba(212,175,55,0.3)] transition-colors w-full
     [border-color:var(--a-border)]
   `;
 
@@ -122,7 +122,7 @@ export default function AdminCategoriesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-[26px] text-white/90 font-light tracking-wide"
+          <h1 className="text-[26px] text-black/90 font-medium tracking-wide"
             style={{ fontFamily: 'var(--font-accent)' }}>
             Categories
           </h1>
@@ -153,7 +153,7 @@ export default function AdminCategoriesPage() {
               <h3 className="text-[#D4AF37] text-sm font-medium">New Category</h3>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-white/40 text-xs mb-1 uppercase tracking-wider">Name *</label>
+                  <label className="block text-black/95 text-xs mb-1 uppercase tracking-wider">Name *</label>
                   <input
                     type="text"
                     value={newForm.name ?? ''}
@@ -167,7 +167,7 @@ export default function AdminCategoriesPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-white/40 text-xs mb-1 uppercase tracking-wider">Slug</label>
+                  <label className="block text-black/95 text-xs mb-1 uppercase tracking-wider">Slug</label>
                   <input
                     type="text"
                     value={newForm.slug ?? ''}
@@ -178,7 +178,7 @@ export default function AdminCategoriesPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-white/40 text-xs mb-1 uppercase tracking-wider">Description</label>
+                <label className="block text-black/95 text-xs mb-1 uppercase tracking-wider">Description</label>
                 <input
                   type="text"
                   value={newForm.description ?? ''}
@@ -200,7 +200,7 @@ export default function AdminCategoriesPage() {
                 <button
                   type="button"
                   onClick={() => setShowNew(false)}
-                  className="px-4 py-2 rounded-xl border border-white/[0.1] text-white/50 text-sm hover:text-white transition-colors"
+                  className="px-4 py-2 rounded-xl border shadow-sm border-black/[0.1] text-black/90 text-sm hover:text-black transition-colors"
                 >
                   Cancel
                 </button>
@@ -211,14 +211,14 @@ export default function AdminCategoriesPage() {
       </AnimatePresence>
 
       {/* Category list */}
-      <div className="rounded-2xl overflow-hidden border" style={{ background: 'var(--a-surface)', borderColor: 'var(--a-border)' }}>
+      <div className="rounded-2xl overflow-hidden border shadow-sm" style={{ background: 'var(--a-surface)', borderColor: 'var(--a-border)' }}>
         {categories.length === 0 ? (
           <div className="px-5 py-12 text-center">
-            <Tag className="w-8 h-8 text-white/10 mx-auto mb-3" />
-            <p className="text-white/30 text-sm">No categories yet.</p>
+            <Tag className="w-8 h-8 text-black/10 mx-auto mb-3" />
+            <p className="text-black/55 text-sm">No categories yet.</p>
           </div>
         ) : (
-          <div className="divide-y divide-white/[0.04]">
+          <div className="divide-y divide-black/[0.04]">
             <AnimatePresence mode="popLayout">
               {categories.map((cat, idx) => (
                 <motion.div
@@ -234,7 +234,7 @@ export default function AdminCategoriesPage() {
                     <div className="p-4 space-y-3 bg-[rgba(212,175,55,0.03)]">
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-white/30 text-[10px] mb-1 uppercase tracking-wider">Name</label>
+                          <label className="block text-black/55 text-[10px] mb-1 uppercase tracking-wider">Name</label>
                           <input
                             type="text"
                             value={editForm.name ?? ''}
@@ -247,7 +247,7 @@ export default function AdminCategoriesPage() {
                           />
                         </div>
                         <div>
-                          <label className="block text-white/30 text-[10px] mb-1 uppercase tracking-wider">Slug</label>
+                          <label className="block text-black/55 text-[10px] mb-1 uppercase tracking-wider">Slug</label>
                           <input
                             type="text"
                             value={editForm.slug ?? ''}
@@ -257,7 +257,7 @@ export default function AdminCategoriesPage() {
                         </div>
                       </div>
                       <div>
-                        <label className="block text-white/30 text-[10px] mb-1 uppercase tracking-wider">Description</label>
+                        <label className="block text-black/55 text-[10px] mb-1 uppercase tracking-wider">Description</label>
                         <input
                           type="text"
                           value={editForm.description ?? ''}
@@ -277,7 +277,7 @@ export default function AdminCategoriesPage() {
                         <button
                           type="button"
                           onClick={() => setEditingId(null)}
-                          className="px-3 py-1.5 rounded-lg border border-white/[0.1] text-white/40 text-xs hover:text-white transition-colors"
+                          className="px-3 py-1.5 rounded-lg border border-black/[0.1] text-black/95 text-xs hover:text-black transition-colors"
                         >
                           Cancel
                         </button>
@@ -285,20 +285,20 @@ export default function AdminCategoriesPage() {
                     </div>
                   ) : (
                     /* Normal row */
-                    <div className="flex items-center gap-3 px-4 py-3 hover:bg-white/[0.02] transition-colors group">
+                    <div className="flex items-center gap-3 px-4 py-3 hover:bg-black/5 transition-colors group">
                       {/* Reorder */}
                       <div className="flex flex-col gap-0.5 shrink-0">
                         <button
                           onClick={() => moveCategory(idx, 'up')}
                           disabled={idx === 0}
-                          className="text-white/20 hover:text-white/50 disabled:opacity-20 transition-colors"
+                          className="text-black/20 hover:text-black/90 disabled:opacity-20 transition-colors"
                         >
                           <ChevronUp className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => moveCategory(idx, 'down')}
                           disabled={idx === categories.length - 1}
-                          className="text-white/20 hover:text-white/50 disabled:opacity-20 transition-colors"
+                          className="text-black/20 hover:text-black/90 disabled:opacity-20 transition-colors"
                         >
                           <ChevronDown className="w-3.5 h-3.5" />
                         </button>
@@ -311,15 +311,15 @@ export default function AdminCategoriesPage() {
 
                       {/* Info */}
                       <div className="flex-1 min-w-0">
-                        <p className="text-white/80 text-sm font-medium">{cat.name}</p>
-                        <p className="text-white/30 text-xs font-mono">/{cat.slug}</p>
+                        <p className="text-black/95 text-sm font-medium">{cat.name}</p>
+                        <p className="text-black/55 text-xs font-mono">/{cat.slug}</p>
                         {cat.description && (
-                          <p className="text-white/30 text-xs mt-0.5 truncate">{cat.description}</p>
+                          <p className="text-black/55 text-xs mt-0.5 truncate">{cat.description}</p>
                         )}
                       </div>
 
                       {/* Product count */}
-                      <div className="flex items-center gap-1 text-white/30 text-xs shrink-0">
+                      <div className="flex items-center gap-1 text-black/55 text-xs shrink-0">
                         <Package className="w-3 h-3" />
                         {productCounts[cat.id] ?? 0}
                       </div>
@@ -328,14 +328,14 @@ export default function AdminCategoriesPage() {
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                         <button
                           onClick={() => startEdit(cat)}
-                          className="p-1.5 rounded-lg text-white/30 hover:text-white hover:bg-white/[0.08] transition-colors"
+                          className="p-1.5 rounded-lg text-black/55 hover:text-black hover:bg-black/[0.08] transition-colors"
                           title="Edit"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => handleDelete(cat)}
-                          className="p-1.5 rounded-lg text-white/30 hover:text-red-400 hover:bg-red-400/[0.08] transition-colors"
+                          className="p-1.5 rounded-lg text-black/55 hover:text-red-400 hover:bg-red-400/[0.08] transition-colors"
                           title="Delete"
                         >
                           <Trash2 className="w-3.5 h-3.5" />

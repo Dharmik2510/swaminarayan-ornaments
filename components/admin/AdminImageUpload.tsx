@@ -66,7 +66,7 @@ export default function AdminImageUpload({ images, onChange, maxImages = 8 }: Pr
             border border-dashed rounded-xl transition-all duration-200 cursor-pointer
             ${draggingOver || processing
               ? 'border-[rgba(212,175,55,0.4)] bg-[rgba(212,175,55,0.04)]'
-              : 'border-white/[0.08] hover:border-white/[0.15] hover:bg-white/[0.015]'}
+              : 'border-black/[0.08] hover:border-black/[0.15] hover:bg-black/[0.015]'}
           `}
         >
           <input
@@ -78,15 +78,15 @@ export default function AdminImageUpload({ images, onChange, maxImages = 8 }: Pr
             onChange={(e) => processFiles(e.target.files)}
           />
           <div className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors duration-200 ${
-            draggingOver ? 'bg-[rgba(212,175,55,0.12)]' : 'bg-white/[0.04]'
+            draggingOver ? 'bg-[rgba(212,175,55,0.12)]' : 'bg-black/5'
           }`}>
-            <Upload className={`w-4 h-4 ${draggingOver ? 'text-[#D4AF37]' : 'text-white/25'}`} />
+            <Upload className={`w-4 h-4 ${draggingOver ? 'text-[#D4AF37]' : 'text-black/90'}`} />
           </div>
           <div className="text-center">
-            <p className="text-white/50 text-sm">
+            <p className="text-black/90 text-sm">
               {processing ? 'Processing…' : 'Drop images or click to upload'}
             </p>
-            <p className="text-white/25 text-xs mt-0.5">
+            <p className="text-black/90 text-xs mt-0.5">
               JPEG · PNG · WebP — auto-compressed &middot; {images.length}/{maxImages}
             </p>
           </div>
@@ -111,7 +111,7 @@ export default function AdminImageUpload({ images, onChange, maxImages = 8 }: Pr
                   exit={{ opacity: 0, scale: 0.85 }}
                   className={`
                     relative w-24 h-24 rounded-xl overflow-hidden border-2 transition-colors duration-200
-                    ${i === 0 ? 'border-[#D4AF37]/70' : 'border-white/[0.08] hover:border-white/20'}
+                    ${i === 0 ? 'border-[#D4AF37]/70' : 'border-black/[0.08] hover:border-black/20'}
                   `}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -129,21 +129,21 @@ export default function AdminImageUpload({ images, onChange, maxImages = 8 }: Pr
                         type="button"
                         onClick={() => setPrimary(i)}
                         title="Set as primary"
-                        className="p-1 bg-white/10 hover:bg-[rgba(212,175,55,0.25)] rounded transition-colors"
+                        className="p-1 bg-black/10 hover:bg-[rgba(212,175,55,0.25)] rounded transition-colors"
                       >
-                        <Star className="w-3 h-3 text-white" />
+                        <Star className="w-3 h-3 text-black" />
                       </button>
                     )}
                     <button
                       type="button"
                       onClick={() => removeImage(i)}
                       title="Remove"
-                      className="p-1 bg-white/10 hover:bg-red-500/40 rounded transition-colors"
+                      className="p-1 bg-black/10 hover:bg-red-500/40 rounded transition-colors"
                     >
-                      <X className="w-3 h-3 text-white" />
+                      <X className="w-3 h-3 text-black" />
                     </button>
                     <div className="p-1 cursor-grab active:cursor-grabbing">
-                      <GripVertical className="w-3 h-3 text-white/50" />
+                      <GripVertical className="w-3 h-3 text-black/90" />
                     </div>
                   </div>
                 </motion.div>
