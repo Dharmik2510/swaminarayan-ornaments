@@ -1,6 +1,6 @@
-import { initializeApp, getApps, getApp } from "firebase/app";
+import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { initializeFirestore } from "firebase/firestore";
+import { initializeFirestore, getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
@@ -13,12 +13,21 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
-// Initialize Firebase only if it hasn't been initialized already
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+// Initialize Firebase
+let app;
+let db;
 
+if (!getApps().length) {
+  app = initializeApp(firebaseConfig);
+  // Use long-polling instead of WebChannel — the default streaming transport
+  // reports "Database not found" in this environment, causing writes to hang.
+  db = initializeFirestore(app, { experimentalForceLongPolling: true });
+} else {
+  app = getApp();
+  db = getFirestore(app);
+}
+
+export { db };
 export const auth = getAuth(app);
-export const db = initializeFirestore(app, {
-  experimentalForceLongPolling: true,
-});
 export const storage = getStorage(app);
 export default app;

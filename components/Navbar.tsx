@@ -7,11 +7,48 @@ import { usePathname } from 'next/navigation';
 import { Search } from 'lucide-react';
 import TilakSymbol from './TilakSymbol';
 
+// Magnetic Button Component for magical interactions
+const MagneticButton = ({ children, className }: { children: React.ReactNode, className?: string }) => {
+  const ref = useRef<HTMLButtonElement>(null);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+
+  const handleMouse = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const { clientX, clientY } = e;
+    const { height, width, left, top } = ref.current!.getBoundingClientRect();
+    const middleX = clientX - (left + width / 2);
+    const middleY = clientY - (top + height / 2);
+    setPosition({ x: middleX * 0.3, y: middleY * 0.3 });
+  };
+
+  const reset = () => {
+    setPosition({ x: 0, y: 0 });
+  };
+
+  const { x, y } = position;
+  return (
+    <motion.button
+      ref={ref}
+      onMouseMove={handleMouse}
+      onMouseLeave={reset}
+      animate={{ x, y }}
+      transition={{ type: 'spring', stiffness: 150, damping: 15, mass: 0.1 }}
+      className={className}
+    >
+      {children}
+    </motion.button>
+  );
+};
+
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeLink, setActiveLink] = useState(0);
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
+  
+  // Spotlight tracking state
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [isHovered, setIsHovered] = useState(false);
+
   const navContainerRef = useRef<HTMLDivElement>(null);
   const linkRefs = useRef<(HTMLAnchorElement | null)[]>([]);
   const { scrollY } = useScroll();
@@ -88,46 +125,92 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [updateIndicator]);
 
+  const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
+    setMousePosition({ x: e.clientX, y: e.clientY });
+  };
+
   return (
     <>
       <motion.nav
-        className="fixed top-0 left-0 right-0 z-[90] transition-all duration-500"
+        onMouseMove={handleMouseMove}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        className="fixed top-0 left-0 right-0 z-[90] transition-colors duration-500 overflow-hidden"
         style={{
           background: isScrolled
-            ? 'rgba(43, 12, 16, 0.92)'
+            ? 'rgba(43, 12, 16, 0.85)'
             : 'transparent',
           backdropFilter: isScrolled ? 'blur(24px) saturate(1.2)' : 'none',
           borderBottom: isScrolled
-            ? '1px solid rgba(212, 175, 55, 0.08)'
+            ? '1px solid rgba(212, 175, 55, 0.15)'
             : '1px solid transparent',
         }}
       >
-        <div className="max-w-[1400px] w-full mx-auto px-6 py-4 flex items-center justify-between">
+        {/* Magical Spotlight Effect */}
+        <motion.div
+          className="pointer-events-none absolute inset-0 z-0 transition-opacity duration-500"
+          animate={{ opacity: isHovered ? 1 : 0 }}
+          style={{
+            background: `radial-gradient(400px circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(212, 175, 55, 0.08), transparent 40%)`,
+          }}
+        />
+
+        {/* Shimmering Top Border line when scrolled */}
+        <AnimatePresence>
+          {isScrolled && (
+            <motion.div
+              initial={{ scaleX: 0, opacity: 0 }}
+              animate={{ scaleX: 1, opacity: 1 }}
+              exit={{ scaleX: 0, opacity: 0 }}
+              transition={{ duration: 0.8 }}
+              className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[var(--color-gold)] to-transparent opacity-30 origin-center"
+            />
+          )}
+        </AnimatePresence>
+
+        <div className="max-w-[1400px] w-full mx-auto px-6 py-4 flex items-center justify-between relative z-10">
           {/* Logo (Left) */}
           <Link href="/" data-hoverable className="flex items-center gap-3 group">
             <motion.div
-              whileHover={{ rotate: [0, -5, 5, 0] }}
-              transition={{ duration: 0.5 }}
+              whileHover={{ rotate: [0, -10, 10, -5, 5, 0], scale: 1.1 }}
+              transition={{ duration: 0.6 }}
             >
-              <TilakSymbol className="w-5 h-7 shrink-0" />
+              <TilakSymbol className="w-5 h-7 shrink-0 drop-shadow-lg drop-shadow-gold" />
             </motion.div>
             <motion.div
-              className="text-sm md:text-base tracking-[0.12em] gold-gradient-text uppercase"
+              className="text-sm md:text-base tracking-[0.12em] gold-gradient-text uppercase relative overflow-hidden"
               style={{ fontFamily: 'var(--font-display)', fontWeight: 600 }}
             >
               SWAMINARAYAN ORNAMENTS
+              <motion.div 
+                className="absolute inset-0 bg-white/20 -skew-x-12 -translate-x-full"
+                whileHover={{ translateX: '200%' }}
+                transition={{ duration: 0.7, ease: "easeInOut" }}
+              />
             </motion.div>
           </Link>
 
           {/* Desktop Nav Links (Center) — with liquid gold indicator */}
-          <div ref={navContainerRef} className="hidden md:flex flex-1 justify-center items-center gap-8 lg:gap-10 relative">
+          <motion.div 
+            ref={navContainerRef} 
+            className="hidden md:flex flex-1 justify-center items-center gap-8 lg:gap-10 relative"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.8 }}
+          >
             {navLinks.map((link, index) => (
               <Link
                 key={link.label}
                 ref={(el) => { linkRefs.current[index] = el; }}
                 href={link.href}
                 data-hoverable
-                className="text-xs tracking-[0.1em] capitalize transition-all duration-300 relative py-1"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 + index * 0.1 }}
+                className="text-xs tracking-[0.1em] capitalize transition-all duration-300 relative py-1 group"
                 style={{
                   fontFamily: 'var(--font-body)',
                   fontWeight: activeLink === index ? 500 : 400,
@@ -159,11 +242,11 @@ export default function Navbar() {
               }}
               style={{
                 background: 'linear-gradient(90deg, transparent, #D4AF37, #FFD700, #D4AF37, transparent)',
-                boxShadow: '0 0 8px rgba(212, 175, 55, 0.5), 0 0 20px rgba(212, 175, 55, 0.2)',
+                boxShadow: '0 0 8px rgba(212, 175, 55, 0.6), 0 0 20px rgba(212, 175, 55, 0.3)',
                 borderRadius: '1px',
               }}
             />
-          </div>
+          </motion.div>
 
           {/* Icons (Right) */}
           <div className="hidden md:flex items-center justify-end gap-6 w-48">
@@ -175,7 +258,7 @@ export default function Navbar() {
           {/* Mobile menu button */}
           <motion.button
             data-hoverable
-            className="md:hidden p-2"
+            className="md:hidden p-2 relative z-10 block"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             whileTap={{ scale: 0.95 }}
           >

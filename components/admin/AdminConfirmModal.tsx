@@ -50,7 +50,7 @@ export default function AdminConfirmModal() {
               </div>
 
               <h3
-                className="text-[18px] text-white/90 text-center mb-2 font-light"
+                className="text-[18px] text-black/90 text-center mb-2 font-medium"
                 style={{ fontFamily: 'var(--font-accent)' }}
               >
                 {title}
@@ -63,7 +63,7 @@ export default function AdminConfirmModal() {
               <div className="flex gap-2.5">
                 <button
                   onClick={() => resolveConfirm(false)}
-                  className="flex-1 py-2.5 rounded-xl border text-sm transition-all duration-200 hover:bg-white/[0.04]"
+                  className="flex-1 py-2.5 rounded-xl border shadow-sm text-sm transition-all duration-200 hover:bg-black/5"
                   style={{ borderColor: 'var(--a-border)', color: 'var(--a-muted)' }}
                 >
                   Cancel
@@ -72,7 +72,7 @@ export default function AdminConfirmModal() {
                   onClick={() => resolveConfirm(true)}
                   className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                     variant === 'danger'
-                      ? 'bg-red-500/90 hover:bg-red-500 text-white'
+                      ? 'bg-red-500/90 hover:bg-red-500 text-black'
                       : 'bg-[#D4AF37] hover:bg-[#E6C24A] text-black'
                   }`}
                 >

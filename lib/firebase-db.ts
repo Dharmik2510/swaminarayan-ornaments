@@ -8,12 +8,24 @@ const ACTIVITY_LOGS_COLLECTION = 'activityLogs';
 
 export async function getProducts(): Promise<Product[]> {
   const querySnapshot = await getDocs(collection(db, PRODUCTS_COLLECTION));
-  return querySnapshot.docs.map(d => d.data() as Product).sort((a,b) => a.order - b.order);
+  return querySnapshot.docs.map(d => {
+    const data = d.data() as Product;
+    if (data.images && Array.isArray(data.images)) {
+      data.images = data.images.filter(img => typeof img === 'string' && img.trim() !== '' && img !== '//');
+    }
+    return data;
+  }).sort((a,b) => a.order - b.order);
 }
 
 export async function getProduct(id: string): Promise<Product | undefined> {
   const docSnap = await getDoc(doc(db, PRODUCTS_COLLECTION, id));
-  if (docSnap.exists()) return docSnap.data() as Product;
+  if (docSnap.exists()) {
+    const data = docSnap.data() as Product;
+    if (data.images && Array.isArray(data.images)) {
+      data.images = data.images.filter(img => typeof img === 'string' && img.trim() !== '' && img !== '//');
+    }
+    return data;
+  }
   return undefined;
 }
 
@@ -45,12 +57,30 @@ export async function updateProduct(id: string, updates: Partial<Product>): Prom
   return null;
 }
 
+/** Soft-delete: marks the product as deleted. Stays recoverable via the Trash page. */
 export async function deleteProduct(id: string): Promise<boolean> {
   const product = await getProduct(id);
   if (!product) return false;
-  await deleteDoc(doc(db, PRODUCTS_COLLECTION, id));
+  await updateDoc(doc(db, PRODUCTS_COLLECTION, id), { deletedAt: new Date().toISOString() });
   await logActivity({ action: 'deleted', entityType: 'product', entityId: id, entityName: product.name });
   return true;
+}
+
+/** Hard-delete: removes the Firestore doc permanently. */
+export async function purgeProduct(id: string): Promise<boolean> {
+  const docRef = doc(db, PRODUCTS_COLLECTION, id);
+  const snap = await getDoc(docRef);
+  if (!snap.exists()) return false;
+  await deleteDoc(docRef);
+  return true;
+}
+
+export async function restoreProduct(id: string): Promise<Product | null> {
+  const docRef = doc(db, PRODUCTS_COLLECTION, id);
+  await updateDoc(docRef, { deletedAt: null });
+  const snap = await getDoc(docRef);
+  if (!snap.exists()) return null;
+  return snap.data() as Product;
 }
 
 export async function duplicateProduct(id: string): Promise<Product | null> {
@@ -62,11 +92,19 @@ export async function duplicateProduct(id: string): Promise<Product | null> {
   return dup;
 }
 
+/** Soft-delete many products at once (batched). */
 export async function deleteProductsBulk(ids: string[]): Promise<void> {
   const batch = writeBatch(db);
+  const now = new Date().toISOString();
   for (const id of ids) {
-    batch.delete(doc(db, PRODUCTS_COLLECTION, id));
+    batch.update(doc(db, PRODUCTS_COLLECTION, id), { deletedAt: now });
   }
+  await batch.commit();
+}
+
+export async function purgeProductsBulk(ids: string[]): Promise<void> {
+  const batch = writeBatch(db);
+  for (const id of ids) batch.delete(doc(db, PRODUCTS_COLLECTION, id));
   await batch.commit();
 }
 
@@ -85,6 +123,64 @@ export async function updateProductsBulkStatus(ids: string[], status: Product['s
   for (const id of ids) {
     batch.update(doc(db, PRODUCTS_COLLECTION, id), { status, updatedAt: now });
   }
+  await batch.commit();
+}
+
+export type BulkEditOps = {
+  /** Tags to add to existing (deduplicated) */
+  addTags?: string[];
+  /** Tags to remove from existing */
+  removeTags?: string[];
+  /** If set, overrides featured flag */
+  featured?: boolean;
+  /** If set, overrides carat */
+  carat?: 92 | 84;
+  /** If set, appends text to description. {{name}} / {{carat}} are substituted. */
+  appendDescription?: string;
+};
+
+function interpolate(template: string, product: Product): string {
+  return template
+    .replace(/\{\{\s*name\s*\}\}/g, product.name)
+    .replace(/\{\{\s*carat\s*\}\}/g, String(product.carat));
+}
+
+export async function applyBulkEdit(ids: string[], ops: BulkEditOps): Promise<void> {
+  const now = new Date().toISOString().split('T')[0];
+  const hasTagOps = (ops.addTags?.length ?? 0) > 0 || (ops.removeTags?.length ?? 0) > 0;
+  const hasAppend = !!ops.appendDescription?.trim();
+
+  // Tag and description changes need per-product read-modify-write.
+  if (hasTagOps || hasAppend) {
+    for (const id of ids) {
+      const p = await getProduct(id);
+      if (!p) continue;
+      const updates: Partial<Product> = { updatedAt: now };
+      if (hasTagOps) {
+        const remove = new Set((ops.removeTags ?? []).map(t => t.toLowerCase()));
+        const current = (p.tags ?? []).filter(t => !remove.has(t.toLowerCase()));
+        const merged = new Set(current.map(t => t.toLowerCase()));
+        (ops.addTags ?? []).forEach(t => merged.add(t.toLowerCase()));
+        updates.tags = Array.from(merged);
+      }
+      if (ops.featured !== undefined) updates.featured = ops.featured;
+      if (ops.carat !== undefined) updates.carat = ops.carat;
+      if (hasAppend) {
+        const prefix = p.description ? `${p.description}\n\n` : '';
+        updates.description = `${prefix}${interpolate(ops.appendDescription!.trim(), p)}`;
+      }
+      await updateDoc(doc(db, PRODUCTS_COLLECTION, id), updates as { [k: string]: unknown });
+    }
+    return;
+  }
+
+  // Simple flag-only changes batch nicely.
+  if (ops.featured === undefined && ops.carat === undefined) return;
+  const batch = writeBatch(db);
+  const updates: Record<string, unknown> = { updatedAt: now };
+  if (ops.featured !== undefined) updates.featured = ops.featured;
+  if (ops.carat !== undefined) updates.carat = ops.carat;
+  for (const id of ids) batch.update(doc(db, PRODUCTS_COLLECTION, id), updates);
   await batch.commit();
 }
 
