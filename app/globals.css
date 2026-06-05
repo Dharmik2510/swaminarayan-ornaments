@@ -30,8 +30,110 @@
   --font-accent: 'Cormorant Garamond', Georgia, serif;
 }
 
-/* ===== BASE RESET ===== */
-* {
+/* ===== STOREFRONT (customer-facing) ===== */
+.storefront {
+  --store-bg: #0c0a08;
+  --store-surface: #14110e;
+  --store-elevated: #1c1814;
+  --store-text: #f5f0e8;
+  --store-muted: rgba(245, 240, 232, 0.55);
+  --store-gold: #c9a962;
+  --store-gold-soft: #e8d5a8;
+  --store-gold-dim: rgba(201, 169, 98, 0.35);
+  --store-border: rgba(255, 255, 255, 0.08);
+  background-color: var(--store-bg);
+  color: var(--store-text);
+  font-family: var(--font-body);
+}
+
+.storefront * {
+  cursor: auto !important;
+}
+
+.store-nav-scrolled {
+  background: rgba(12, 10, 8, 0.88);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--store-border);
+}
+
+.store-hero-glow {
+  background:
+    radial-gradient(ellipse 80% 50% at 70% 20%, rgba(201, 169, 98, 0.08), transparent),
+    radial-gradient(ellipse 60% 40% at 20% 80%, rgba(138, 28, 41, 0.06), transparent);
+}
+
+.store-input {
+  padding: 0.625rem 0.875rem;
+  font-size: 0.8125rem;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--store-border);
+  color: var(--store-text);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.store-input::placeholder {
+  color: var(--store-muted);
+}
+
+.store-input:focus {
+  border-color: var(--store-gold-dim);
+}
+
+.store-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.875rem 1.5rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 500;
+  background: var(--store-gold);
+  color: #0c0a08;
+  border-radius: 9999px;
+  transition: background 0.25s, transform 0.2s;
+}
+
+.store-btn-primary:hover {
+  background: var(--store-gold-soft);
+}
+
+.store-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.875rem 1.5rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--store-muted);
+  border: 1px solid var(--store-border);
+  border-radius: 9999px;
+  transition: color 0.25s, border-color 0.25s;
+}
+
+.store-btn-ghost:hover {
+  color: var(--store-gold);
+  border-color: var(--store-gold-dim);
+}
+
+.store-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.store-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--store-gold-dim);
+  border-radius: 4px;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* ===== BASE RESET (legacy home effects — not used on storefront) ===== */
+body:not(:has(.storefront)) * {
   cursor: none !important;
 }
 

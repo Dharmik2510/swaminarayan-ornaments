@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import Image from 'next/image';
+import Link from 'next/link';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { defaultCategories, mockProducts } from '@/lib/data';
 import type { Product } from '@/lib/data';
@@ -86,7 +87,7 @@ export default function FeaturedCategories() {
         const { getCategories, getProducts } = await import('@/lib/firebase-db');
         const [cats, products] = await withTimeout(
           Promise.all([getCategories(), getProducts()]),
-          4000
+          20000
         );
         const resolvedCats = cats.length > 0 ? cats : defaultCategories;
         const resolvedProducts = products.length > 0 ? products : mockProducts;
@@ -179,10 +180,8 @@ export default function FeaturedCategories() {
             className="runway-scroll pl-6 md:pl-[max(1.5rem,calc((100vw-80rem)/2+1.5rem))] pr-24"
           >
             {categoryData.map((category, index) => (
-              <motion.a
+              <motion.div
                 key={category.name}
-                href="#collection"
-                data-hoverable
                 className="group relative w-[300px] md:w-[380px] rounded-xl overflow-hidden flex flex-col"
                 style={{
                   background: hoveredIndex === index
@@ -199,6 +198,11 @@ export default function FeaturedCategories() {
                 onMouseLeave={() => setHoveredIndex(null)}
                 whileHover={{ y: -8 }}
               >
+                <Link
+                  href={`/collection?category=${encodeURIComponent(category.name)}`}
+                  data-hoverable
+                  className="flex flex-col flex-grow"
+                >
                 {/* Image Container with parallax-style scale */}
                 <div className="relative h-56 md:h-72 w-full overflow-hidden">
                   {/* Ambient glow */}
@@ -260,12 +264,14 @@ export default function FeaturedCategories() {
                   </div>
                 </div>
 
+                </Link>
+
                 {/* Subtle corner accents */}
                 <div className="absolute top-0 right-0 w-12 h-12 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700">
                   <div className="absolute top-0 right-0 w-full h-[1px] bg-gradient-to-l from-gold/40 to-transparent" />
                   <div className="absolute top-0 right-0 h-full w-[1px] bg-gradient-to-b from-gold/40 to-transparent" />
                 </div>
-              </motion.a>
+              </motion.div>
             ))}
           </div>
         </div>

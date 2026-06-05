@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Package, Tag, Star, Clock, Plus, ArrowRight, TrendingUp } from 'lucide-react';
+import { Package, Tag, Star, Clock, Plus, ArrowRight, TrendingUp, Image as ImageIcon, FileText, Search as SearchIcon, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { getProducts } from '@/lib/firebase';
 import { getCategories, getActivityLogs } from '@/lib/firebase';
 import type { Product, ActivityLog, CategoryItem } from '@/lib/data';
@@ -43,6 +43,31 @@ export default function AdminDashboard() {
   const active   = products.filter(p => p.status === 'active').length;
   const draft    = products.filter(p => p.status === 'draft').length;
   const featured = products.filter(p => p.featured).length;
+
+  // Operational signals — "what needs attention".
+  const sevenDaysAgoMs = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const missingImages      = products.filter(p => p.status === 'active' && (!p.images || p.images.length === 0)).length;
+  const missingDescription = products.filter(p => p.status === 'active' && !p.description?.trim()).length;
+  const missingSeo         = products.filter(p => p.status === 'active' && (!p.seoTitle?.trim() || !p.seoDescription?.trim())).length;
+  const oldDrafts          = products.filter(p => p.status === 'draft' && new Date(p.updatedAt).getTime() < sevenDaysAgoMs).length;
+  const emptyCategories    = categories.filter(c => !products.some(p => p.category === c.name)).length;
+  const totalActionItems   = missingImages + missingDescription + missingSeo + oldDrafts + emptyCategories;
+
+  const actionCards: Array<{
+    key: string;
+    count: number;
+    label: string;
+    hint: string;
+    href: string;
+    icon: typeof Package;
+    tone: 'warn' | 'info';
+  }> = [
+    { key: 'img',  count: missingImages,      label: 'Active products missing images',      hint: "Customers can't see them", href: '/admin/products?status=active&missingImage=1',       icon: ImageIcon, tone: 'warn' as const },
+    { key: 'desc', count: missingDescription, label: 'Active products missing description', hint: 'Hurts trust & SEO',        href: '/admin/products?status=active&missingDescription=1', icon: FileText,  tone: 'warn' as const },
+    { key: 'seo',  count: missingSeo,         label: 'Missing SEO metadata',                hint: "Won't rank on Google",     href: '/admin/products?status=active&missingSeo=1',         icon: SearchIcon,tone: 'info' as const },
+    { key: 'old',  count: oldDrafts,          label: 'Drafts older than 7 days',            hint: 'Publish or archive',       href: '/admin/products?status=draft',                        icon: Clock,     tone: 'info' as const },
+    { key: 'cat',  count: emptyCategories,    label: 'Empty categories',                    hint: 'Nothing to display',       href: '/admin/categories',                                   icon: Tag,       tone: 'info' as const },
+  ].filter(c => c.count > 0);
 
   const recentProducts = [...products]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -109,6 +134,65 @@ export default function AdminDashboard() {
         <AdminStatsCard label="Drafts"           value={draft}             icon={Clock}       color="blue"   delay={0.3} />
         <AdminStatsCard label="Featured"         value={featured}          icon={Star}        color="purple" delay={0.4} />
       </div>
+
+      {/* Action needed */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.35 }}
+        className="rounded-2xl overflow-hidden border shadow-sm"
+        style={{ background: 'var(--a-surface)', borderColor: 'var(--a-border)' }}
+      >
+        <div className="flex items-center justify-between px-5 py-4 border-b border-black/10">
+          <div className="flex items-center gap-2">
+            <h2 className="text-black/95 text-sm font-medium">Action needed</h2>
+            {totalActionItems === 0 ? (
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+            ) : (
+              <span className="text-[10px] font-semibold bg-amber-500/15 text-amber-700 rounded-full px-2 py-0.5">
+                {totalActionItems}
+              </span>
+            )}
+          </div>
+          <span className="text-[11px] text-black/40 tracking-wider uppercase">What to fix next</span>
+        </div>
+
+        {actionCards.length === 0 ? (
+          <div className="px-5 py-8 flex items-center gap-3 text-sm text-black/60">
+            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+            All caught up — catalogue is in good shape.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-black/[0.04]">
+            {actionCards.map(card => {
+              const Icon = card.icon;
+              const isWarn = card.tone === 'warn';
+              return (
+                <Link
+                  key={card.key}
+                  href={card.href}
+                  className="group flex items-center gap-3 px-5 py-4 bg-[var(--a-surface)] hover:bg-black/[0.02] transition-colors"
+                >
+                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+                    isWarn ? 'bg-amber-500/10 text-amber-600' : 'bg-[#D4AF37]/10 text-[#D4AF37]'
+                  }`}>
+                    {card.count > 0 ? (
+                      <span className="text-[13px] font-semibold tabular-nums">{card.count}</span>
+                    ) : (
+                      <Icon className="w-4 h-4" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-black/90 text-sm font-medium leading-tight">{card.label}</p>
+                    <p className="text-black/50 text-[11px] mt-0.5">{card.hint}</p>
+                  </div>
+                  <ArrowRight className="w-3.5 h-3.5 text-black/30 group-hover:text-[#D4AF37] group-hover:translate-x-1 transition-all" />
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </motion.div>
 
       {/* Two-column layout */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
@@ -185,8 +269,11 @@ export default function AdminDashboard() {
           className="lg:col-span-2 rounded-2xl overflow-hidden border shadow-sm flex flex-col"
           style={{ background: 'var(--a-surface)', borderColor: 'var(--a-border)', maxHeight: '420px' } as React.CSSProperties}
         >
-          <div className="px-5 py-4 border-b border-black/10 shrink-0 bg-[var(--a-surface)] z-10">
+          <div className="px-5 py-4 border-b border-black/10 shrink-0 bg-[var(--a-surface)] z-10 flex items-center justify-between">
             <h2 className="text-black/95 text-sm font-medium">Activity Log</h2>
+            <Link href="/admin/activity" className="text-[#D4AF37] text-xs hover:underline flex items-center gap-1 group">
+              All <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+            </Link>
           </div>
 
           <motion.div 

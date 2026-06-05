@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import type { Product } from '@/lib/data';
@@ -12,6 +13,31 @@ interface ProductDetailModalProps {
 }
 
 export default function ProductDetailModal({ product, isOpen, onClose }: ProductDetailModalProps) {
+  const pushedRef = useRef(false);
+
+  const stableOnClose = useCallback(onClose, [onClose]);
+
+  // Push a history entry when the modal opens so the back button closes it
+  useEffect(() => {
+    if (isOpen) {
+      window.history.pushState({ modal: true }, '');
+      pushedRef.current = true;
+
+      const handlePopState = () => {
+        // Browser back was pressed — close the modal
+        pushedRef.current = false;
+        stableOnClose();
+      };
+
+      window.addEventListener('popstate', handlePopState);
+      return () => window.removeEventListener('popstate', handlePopState);
+    } else if (pushedRef.current) {
+      // Modal closed via UI (not back button) — pop the extra history entry
+      pushedRef.current = false;
+      window.history.back();
+    }
+  }, [isOpen, stableOnClose]);
+
   if (!product) return null;
 
   const gradients = [

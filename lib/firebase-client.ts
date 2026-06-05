@@ -13,21 +13,17 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
-// Initialize Firebase
 let app: FirebaseApp;
 let db: Firestore;
-
-const databaseId = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_ID || "default";
 
 if (!getApps().length) {
   app = initializeApp(firebaseConfig);
   // Use long-polling instead of WebChannel — the default streaming transport
   // reports "Database not found" in this environment, causing writes to hang.
-  // Explicitly specify the database ID instead of leaving it empty for "(default)"
-  db = initializeFirestore(app, { experimentalForceLongPolling: true }, databaseId);
+  db = initializeFirestore(app, { experimentalForceLongPolling: true });
 } else {
   app = getApp();
-  db = getFirestore(app, databaseId);
+  db = getFirestore(app);
 }
 
 export { db };

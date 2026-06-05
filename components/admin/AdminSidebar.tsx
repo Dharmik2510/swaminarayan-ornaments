@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Package, Tag, Image as ImageIcon,
-  LogOut, ExternalLink, X,
+  LogOut, ExternalLink, X, Trash2,
 } from 'lucide-react';
 import { useAdmin } from './AdminContext';
 import TilakSymbol from '../TilakSymbol';
@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { href: '/admin/products',   label: 'Products',   icon: Package },
   { href: '/admin/categories', label: 'Categories', icon: Tag },
   { href: '/admin/media',      label: 'Media',      icon: ImageIcon },
+  { href: '/admin/trash',      label: 'Trash',      icon: Trash2 },
   { href: '/admin/guide',      label: 'Guide',      icon: ExternalLink },
 ];
 
@@ -111,7 +112,19 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
 
       {/* Nav */}
       <nav className="flex-1 px-3 space-y-1 overflow-y-auto custom-scrollbar">
-        <motion.p 
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.15 }}
+          onClick={() => {
+            window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }));
+          }}
+          className="mx-3 mb-3 flex items-center gap-2 px-3 py-2 rounded-lg border border-black/[0.08] text-left text-black/55 hover:text-black/90 hover:border-black/20 transition-colors w-[calc(100%-1.5rem)]"
+        >
+          <span className="text-[12px] flex-1">Search & jump…</span>
+          <kbd className="text-[9px] tracking-wider text-black/40 border border-black/10 rounded px-1 py-0.5">⌘K</kbd>
+        </motion.button>
+        <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
