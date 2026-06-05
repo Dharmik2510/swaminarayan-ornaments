@@ -207,9 +207,6 @@ export default function Navbar() {
                 ref={(el) => { linkRefs.current[index] = el; }}
                 href={link.href}
                 data-hoverable
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 + index * 0.1 }}
                 className="text-xs tracking-[0.1em] capitalize transition-all duration-300 relative py-1 group"
                 style={{
                   fontFamily: 'var(--font-body)',

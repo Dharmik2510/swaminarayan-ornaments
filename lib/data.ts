@@ -44,14 +44,24 @@ export interface ActivityLog {
 }
 
 export const defaultCategories: CategoryItem[] = [
-  { id: 'cat-001', name: 'Necklaces',    slug: 'necklaces',    order: 1, createdAt: '2024-01-01' },
-  { id: 'cat-002', name: 'Bangles',      slug: 'bangles',      order: 2, createdAt: '2024-01-01' },
-  { id: 'cat-003', name: 'Earrings',     slug: 'earrings',     order: 3, createdAt: '2024-01-01' },
-  { id: 'cat-004', name: 'Rings',        slug: 'rings',        order: 4, createdAt: '2024-01-01' },
-  { id: 'cat-005', name: 'Chains',       slug: 'chains',       order: 5, createdAt: '2024-01-01' },
-  { id: 'cat-006', name: 'Bracelets',    slug: 'bracelets',    order: 6, createdAt: '2024-01-01' },
-  { id: 'cat-007', name: 'Pendants',     slug: 'pendants',     order: 7, createdAt: '2024-01-01' },
-  { id: 'cat-008', name: 'Mangalsutra',  slug: 'mangalsutra',  order: 8, createdAt: '2024-01-01' },
+  { id: 'cat-001', name: 'Necklaces', slug: 'necklaces', order: 1, createdAt: '2024-01-01' },
+  { id: 'cat-002', name: 'Bangles', slug: 'bangles', order: 2, createdAt: '2024-01-01' },
+  { id: 'cat-003', name: 'Earrings', slug: 'earrings', order: 3, createdAt: '2024-01-01' },
+  { id: 'cat-004', name: 'Rings', slug: 'rings', order: 4, createdAt: '2024-01-01' },
+  { id: 'cat-005', name: 'Chains', slug: 'chains', order: 5, createdAt: '2024-01-01' },
+  { id: 'cat-006', name: 'Bracelets', slug: 'bracelets', order: 6, createdAt: '2024-01-01' },
+  { id: 'cat-007', name: 'Pendants', slug: 'pendants', order: 7, createdAt: '2024-01-01' },
+  { id: 'cat-008', name: 'Mangalsutra', slug: 'mangalsutra', order: 8, createdAt: '2024-01-01' },
+  { id: 'cat-009', name: 'Nose Pins', slug: 'nose-pins', order: 9, createdAt: '2024-01-01' },
+  { id: 'cat-010', name: 'Anklets', slug: 'anklets', order: 10, createdAt: '2024-01-01' },
+  { id: 'cat-011', name: 'Kada', slug: 'kada', order: 11, createdAt: '2024-01-01' },
+  { id: 'cat-012', name: 'Sets', slug: 'sets', order: 12, createdAt: '2024-01-01' },
+  { id: 'cat-013', name: 'Bridal Sets', slug: 'bridal-sets', order: 13, createdAt: '2024-01-01' },
+  { id: 'cat-014', name: 'Temple Jewellery', slug: 'temple-jewellery', order: 14, createdAt: '2024-01-01' },
+  { id: 'cat-015', name: 'Kundan', slug: 'kundan', order: 15, createdAt: '2024-01-01' },
+  { id: 'cat-016', name: 'Polki', slug: 'polki', order: 16, createdAt: '2024-01-01' },
+  { id: 'cat-017', name: 'Coins & Bars', slug: 'coins-bars', order: 17, createdAt: '2024-01-01' },
+  { id: 'cat-018', name: 'Custom Orders', slug: 'custom-orders', order: 18, createdAt: '2024-01-01' },
 ];
 
 export interface ProductSummary {
@@ -73,19 +83,11 @@ export interface ConciergeResult {
   };
 }
 
-export const categories = [
-  'All',
-  'Necklaces',
-  'Bangles',
-  'Earrings',
-  'Rings',
-  'Chains',
-  'Bracelets',
-  'Pendants',
-  'Mangalsutra',
-] as const;
+/** @deprecated Use dynamic filters from `loadCatalog()` / `buildCategoryFilters()` */
+export const categories = ['All', ...defaultCategories.map((c) => c.name)] as const;
 
-export type Category = (typeof categories)[number];
+/** Dynamic category name from catalog (includes "All") */
+export type Category = string;
 
 export const mockProducts: Product[] = [
   {

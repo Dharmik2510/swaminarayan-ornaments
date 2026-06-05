@@ -16,15 +16,16 @@ function LoginScreen() {
   const { login } = useAdmin();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const ok = await login(email, password);
-    if (!ok) {
-      setError(true);
+    setErrorMessage(null);
+    const result = await login(email, password);
+    if (!result.ok) {
+      setErrorMessage(result.message);
       setLoading(false);
     }
   };
@@ -97,17 +98,17 @@ function LoginScreen() {
               <input
                 type="email"
                 value={email}
-                onChange={(e) => { setEmail(e.target.value); setError(false); }}
+                onChange={(e) => { setEmail(e.target.value); setErrorMessage(null); }}
                 placeholder="Enter admin email"
                 autoFocus
                 className={`
                   w-full rounded-xl px-4 py-3 text-sm text-black/85 outline-none
                   transition-all duration-300 placeholder:text-black/20
-                  ${error
+                  ${errorMessage
                     ? 'border border-red-500/40 bg-red-50/50 focus:border-red-500/60 shadow-[0_0_15px_rgba(239,68,68,0.1)]'
                     : 'border bg-black/[0.02] focus:bg-white focus:shadow-[0_0_20px_rgba(212,175,55,0.1)] focus:border-[#D4AF37]/50'}
                 `}
-                style={error ? {} : { borderColor: 'var(--a-border)' }}
+                style={errorMessage ? {} : { borderColor: 'var(--a-border)' }}
               />
             </div>
             <div>
@@ -118,26 +119,26 @@ function LoginScreen() {
               <input
                 type="password"
                 value={password}
-                onChange={(e) => { setPassword(e.target.value); setError(false); }}
+                onChange={(e) => { setPassword(e.target.value); setErrorMessage(null); }}
                 placeholder="Enter password"
                 className={`
                   w-full rounded-xl px-4 py-3 text-sm text-black/85 outline-none
                   transition-all duration-300 placeholder:text-black/20
-                  ${error
+                  ${errorMessage
                     ? 'border border-red-500/40 bg-red-50/50 focus:border-red-500/60 shadow-[0_0_15px_rgba(239,68,68,0.1)]'
                     : 'border bg-black/[0.02] focus:bg-white focus:shadow-[0_0_20px_rgba(212,175,55,0.1)] focus:border-[#D4AF37]/50'}
                 `}
-                style={error ? {} : { borderColor: 'var(--a-border)' }}
+                style={errorMessage ? {} : { borderColor: 'var(--a-border)' }}
               />
               <AnimatePresence>
-                {error && (
+                {errorMessage && (
                   <motion.p
                     initial={{ opacity: 0, y: -4 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
-                    className="text-red-500/90 text-xs mt-2 tracking-wide font-medium flex items-center gap-1"
+                    className="text-red-500/90 text-xs mt-2 tracking-wide font-medium leading-relaxed"
                   >
-                    <span>⚠️</span> Incorrect credentials.
+                    {errorMessage}
                   </motion.p>
                 )}
               </AnimatePresence>

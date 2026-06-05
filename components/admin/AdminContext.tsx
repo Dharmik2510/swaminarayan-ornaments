@@ -46,7 +46,7 @@ interface AdminCtx {
   isAuthenticated: boolean;
   user: User | null;
   loadingAuth: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<{ ok: true } | { ok: false; message: string }>;
   logout: () => Promise<void>;
   toasts: Toast[];
   toast: (message: string, variantOrOptions?: ToastVariant | ToastOptions) => string;
@@ -54,6 +54,30 @@ interface AdminCtx {
   confirm: (opts: { title?: string; message: string; confirmLabel?: string; variant?: 'danger' | 'default' }) => Promise<boolean>;
   confirmState: ConfirmState;
   resolveConfirm: (ok: boolean) => void;
+}
+
+function authErrorMessage(code: string): string {
+  switch (code) {
+    case 'auth/invalid-email':
+      return 'That email address is not valid.';
+    case 'auth/user-disabled':
+      return 'This account has been disabled in Firebase.';
+    case 'auth/user-not-found':
+    case 'auth/wrong-password':
+    case 'auth/invalid-credential':
+      return 'Email or password does not match. Check Firebase Authentication → Users uses the same project as your .env file.';
+    case 'auth/invalid-api-key':
+    case 'auth/api-key-not-valid.-please-pass-a-valid-api-key.':
+      return 'Firebase API key is invalid. Update NEXT_PUBLIC_FIREBASE_* in .env and restart the dev server.';
+    case 'auth/too-many-requests':
+      return 'Too many attempts. Wait a few minutes and try again.';
+    case 'auth/network-request-failed':
+      return 'Network error. Check your connection and try again.';
+    default:
+      return code
+        ? `Sign-in failed (${code}). Open the browser console for details.`
+        : 'Sign-in failed. Open the browser console for details.';
+  }
 }
 
 const AdminContext = createContext<AdminCtx | null>(null);
@@ -72,13 +96,19 @@ export function AdminProvider({ children }: { children: ReactNode }) {
 
   const isAuthenticated = !!user;
 
-  const login = useCallback(async (email: string, password: string): Promise<boolean> => {
+  const login = useCallback(async (email: string, password: string) => {
+    const trimmedEmail = email.trim();
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      return true;
-    } catch (e) {
-      console.error(e);
-      return false;
+      await signInWithEmailAndPassword(auth, trimmedEmail, password);
+      return { ok: true as const };
+    } catch (e: unknown) {
+      console.error('Admin login failed:', e);
+      const code =
+        e && typeof e === 'object' && 'code' in e
+          ? String((e as { code: string }).code)
+          : '';
+      const message = authErrorMessage(code);
+      return { ok: false as const, message };
     }
   }, []);
 

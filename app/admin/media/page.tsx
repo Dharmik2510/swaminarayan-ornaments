@@ -26,6 +26,20 @@ export default function AdminMediaPage() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { getMediaItems().then(setItems).catch(err => console.error('[AdminMedia] Failed to load:', err.message)); }, []);
+  useEffect(() => { getProducts().then(setProducts).catch(() => {}); }, []);
+
+  const usageByUrl = useMemo(() => {
+    const map = new Map<string, Product[]>();
+    for (const product of products) {
+      for (const url of product.images ?? []) {
+        if (!url) continue;
+        const list = map.get(url) ?? [];
+        list.push(product);
+        map.set(url, list);
+      }
+    }
+    return map;
+  }, [products]);
 
   const processFiles = useCallback(async (files: FileList | null) => {
     if (!files || files.length === 0) return;

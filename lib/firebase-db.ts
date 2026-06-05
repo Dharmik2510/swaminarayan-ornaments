@@ -6,25 +6,38 @@ const PRODUCTS_COLLECTION = 'products';
 const CATEGORIES_COLLECTION = 'categories';
 const ACTIVITY_LOGS_COLLECTION = 'activityLogs';
 
+function sanitizeProduct(data: Product): Product {
+  if (data.images && Array.isArray(data.images)) {
+    data.images = data.images.filter(
+      (img) => typeof img === 'string' && img.trim() !== '' && img !== '//'
+    );
+  }
+  return data;
+}
+
 export async function getProducts(): Promise<Product[]> {
   const querySnapshot = await getDocs(collection(db, PRODUCTS_COLLECTION));
-  return querySnapshot.docs.map(d => {
-    const data = d.data() as Product;
-    if (data.images && Array.isArray(data.images)) {
-      data.images = data.images.filter(img => typeof img === 'string' && img.trim() !== '' && img !== '//');
-    }
-    return data;
-  }).sort((a,b) => a.order - b.order);
+  return querySnapshot.docs
+    .map((d) => sanitizeProduct(d.data() as Product))
+    .filter((p) => !p.deletedAt)
+    .sort((a, b) => a.order - b.order);
+}
+
+export async function getDeletedProducts(): Promise<Product[]> {
+  const querySnapshot = await getDocs(collection(db, PRODUCTS_COLLECTION));
+  return querySnapshot.docs
+    .map((d) => sanitizeProduct(d.data() as Product))
+    .filter((p) => !!p.deletedAt)
+    .sort(
+      (a, b) =>
+        new Date(b.deletedAt!).getTime() - new Date(a.deletedAt!).getTime()
+    );
 }
 
 export async function getProduct(id: string): Promise<Product | undefined> {
   const docSnap = await getDoc(doc(db, PRODUCTS_COLLECTION, id));
   if (docSnap.exists()) {
-    const data = docSnap.data() as Product;
-    if (data.images && Array.isArray(data.images)) {
-      data.images = data.images.filter(img => typeof img === 'string' && img.trim() !== '' && img !== '//');
-    }
-    return data;
+    return sanitizeProduct(docSnap.data() as Product);
   }
   return undefined;
 }
