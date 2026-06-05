@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { initializeFirestore, getFirestore, type Firestore } from "firebase/firestore";
+import { initializeFirestore, getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
@@ -14,20 +14,17 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-let app: FirebaseApp;
-let db: Firestore;
-
-const databaseId = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_ID || "default";
+let app;
+let db;
 
 if (!getApps().length) {
   app = initializeApp(firebaseConfig);
   // Use long-polling instead of WebChannel — the default streaming transport
   // reports "Database not found" in this environment, causing writes to hang.
-    // Use auto-detect for long polling instead of forcing it
-    db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true }, databaseId);
+  db = initializeFirestore(app, { experimentalForceLongPolling: true });
 } else {
   app = getApp();
-  db = getFirestore(app, databaseId);
+  db = getFirestore(app);
 }
 
 export { db };

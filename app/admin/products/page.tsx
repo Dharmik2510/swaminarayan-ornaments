@@ -171,8 +171,6 @@ export default function AdminProductsPage() {
       setSelected(new Set());
     } catch (err) {
       console.error('[AdminProducts] Failed to load:', (err as Error).message);
-    } finally {
-      setProductsLoaded(true);
     }
   }, []);
 

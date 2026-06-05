@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Product } from '@/lib/data';
-import type { Category } from '@/lib/data';
 import { MessageCircle } from 'lucide-react';
 
 // Dynamic imports for client-only components
@@ -25,8 +24,6 @@ const Footer = dynamic(() => import('@/components/Footer'), { ssr: false });
 export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [selectedCarat, setSelectedCarat] = useState<'all' | 92 | 84>('all');
-  const [selectedCategory, setSelectedCategory] = useState<Category>('All');
 
   // Lock body scroll during loading
   useEffect(() => {
@@ -87,12 +84,8 @@ export default function Home() {
         {/* Diamond Divider */}
         <DiamondDivider />
 
-        {/* Collection */}
+        {/* Collection — Curated Picks */}
         <CollectionSection
-          selectedCarat={selectedCarat}
-          selectedCategory={selectedCategory}
-          onCaratChange={setSelectedCarat}
-          onCategoryChange={setSelectedCategory}
           onSelectProduct={setSelectedProduct}
         />
 

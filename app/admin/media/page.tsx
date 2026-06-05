@@ -25,27 +25,6 @@ export default function AdminMediaPage() {
   const pendingDeletes = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => () => {
-    Object.values(pendingDeletes.current).forEach(clearTimeout);
-  }, []);
-
-  useEffect(() => {
-    getProducts().then(setProducts).catch(() => {});
-  }, []);
-
-  // Map from image URL → products that reference it.
-  const usageByUrl = useMemo(() => {
-    const m = new Map<string, Product[]>();
-    for (const p of products) {
-      for (const url of p.images ?? []) {
-        const existing = m.get(url);
-        if (existing) existing.push(p);
-        else m.set(url, [p]);
-      }
-    }
-    return m;
-  }, [products]);
-
   useEffect(() => { getMediaItems().then(setItems).catch(err => console.error('[AdminMedia] Failed to load:', err.message)); }, []);
 
   const processFiles = useCallback(async (files: FileList | null) => {

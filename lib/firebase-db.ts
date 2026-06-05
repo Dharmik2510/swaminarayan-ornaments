@@ -14,16 +14,7 @@ export async function getProducts(): Promise<Product[]> {
       data.images = data.images.filter(img => typeof img === 'string' && img.trim() !== '' && img !== '//');
     }
     return data;
-  })
-  .filter(p => !p.deletedAt)
-  .sort((a,b) => a.order - b.order);
-}
-
-export async function getDeletedProducts(): Promise<Product[]> {
-  const querySnapshot = await getDocs(collection(db, PRODUCTS_COLLECTION));
-  return querySnapshot.docs.map(d => d.data() as Product)
-    .filter(p => !!p.deletedAt)
-    .sort((a, b) => (b.deletedAt ?? '').localeCompare(a.deletedAt ?? ''));
+  }).sort((a,b) => a.order - b.order);
 }
 
 export async function getProduct(id: string): Promise<Product | undefined> {
