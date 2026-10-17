@@ -1,6 +1,11 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { initializeFirestore, getFirestore, setLogLevel, type Firestore } from "firebase/firestore";
+import {
+  initializeFirestore,
+  getFirestore,
+  setLogLevel,
+  type Firestore,
+} from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
@@ -10,7 +15,7 @@ const firebaseConfig = {
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
 let app: FirebaseApp;
@@ -29,6 +34,9 @@ if (!getApps().length) {
 }
 
 export { db };
-export const auth = getAuth(app);
+// Defer Auth initialization until sign-in so public builds do not require credentials.
+export function getClientAuth() {
+  return getAuth(app);
+}
 export const storage = getStorage(app);
 export default app;

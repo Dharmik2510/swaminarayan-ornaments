@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=JetBrains+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
 @import "./scrollcraft.css";
+@import "./atelier.css";
 
 @theme inline {
   --color-background: #080607;
@@ -222,9 +223,7 @@
 
 
 /* ===== BASE RESET (legacy home effects — not used on storefront) ===== */
-body:not(:has(.storefront)) * {
-  cursor: none !important;
-}
+/* Native cursors remain available across every route. */
 
 /* Admin panel — restore default cursors */
 .admin-bg,

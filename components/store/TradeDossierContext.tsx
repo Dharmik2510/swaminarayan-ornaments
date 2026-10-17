@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   createContext,
@@ -7,11 +7,11 @@ import {
   useEffect,
   useCallback,
   type ReactNode,
-} from 'react';
-import type { Product } from '@/lib/data';
+} from "react";
+import type { Product } from "@/lib/data";
 
-export type PurityPreference = 'both' | '92' | '84';
-export type InquiryMode = 'showroom' | 'catalog' | 'custom';
+export type PurityPreference = "both" | "92" | "84";
+export type InquiryMode = "showroom" | "catalog" | "custom";
 
 interface TradeDossierContextValue {
   shortlist: Product[];
@@ -34,21 +34,24 @@ interface TradeDossierContextValue {
   buildWhatsAppUrl: (phone?: string) => string;
 }
 
-const STORAGE_KEY = 'swaminarayan_trade_dossier_v1';
+const STORAGE_KEY = "swaminarayan_trade_dossier_v1";
 
-const TradeDossierContext = createContext<TradeDossierContextValue | null>(null);
+const TradeDossierContext = createContext<TradeDossierContextValue | null>(
+  null,
+);
 
 export function TradeDossierProvider({ children }: { children: ReactNode }) {
   const [shortlist, setShortlist] = useState<Product[]>([]);
-  const [purityPref, setPurityPref] = useState<PurityPreference>('both');
-  const [inquiryMode, setInquiryMode] = useState<InquiryMode>('showroom');
+  const [storageReady, setStorageReady] = useState(false);
+  const [purityPref, setPurityPref] = useState<PurityPreference>("both");
+  const [inquiryMode, setInquiryMode] = useState<InquiryMode>("showroom");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([
-    'Necklaces',
-    'Bangles',
-    'Bridal Sets',
+    "Necklaces",
+    "Bangles",
+    "Bridal Sets",
   ]);
-  const [businessName, setBusinessName] = useState('');
-  const [city, setCity] = useState('');
+  const [businessName, setBusinessName] = useState("");
+  const [city, setCity] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
@@ -56,21 +59,34 @@ export function TradeDossierProvider({ children }: { children: ReactNode }) {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed.shortlist)) setShortlist(parsed.shortlist);
+        if (Array.isArray(parsed.shortlist))
+          setShortlist(
+            parsed.shortlist.filter(
+              (p: Product) =>
+                p &&
+                typeof p.id === "string" &&
+                typeof p.name === "string" &&
+                Array.isArray(p.images),
+            ),
+          );
         if (parsed.purityPref) setPurityPref(parsed.purityPref);
         if (parsed.inquiryMode) setInquiryMode(parsed.inquiryMode);
         if (Array.isArray(parsed.selectedCategories)) {
           setSelectedCategories(parsed.selectedCategories);
         }
-        if (typeof parsed.businessName === 'string') setBusinessName(parsed.businessName);
-        if (typeof parsed.city === 'string') setCity(parsed.city);
+        if (typeof parsed.businessName === "string")
+          setBusinessName(parsed.businessName);
+        if (typeof parsed.city === "string") setCity(parsed.city);
       }
     } catch {
-      // ignore storage errors
+      // Storage may be unavailable in private browsing.
+    } finally {
+      setStorageReady(true);
     }
   }, []);
 
   useEffect(() => {
+    if (!storageReady) return;
     try {
       localStorage.setItem(
         STORAGE_KEY,
@@ -81,23 +97,31 @@ export function TradeDossierProvider({ children }: { children: ReactNode }) {
           selectedCategories,
           businessName,
           city,
-        })
+        }),
       );
     } catch {
       // ignore storage errors
     }
-  }, [shortlist, purityPref, inquiryMode, selectedCategories, businessName, city]);
+  }, [
+    shortlist,
+    purityPref,
+    inquiryMode,
+    selectedCategories,
+    businessName,
+    city,
+    storageReady,
+  ]);
 
   const isShortlisted = useCallback(
     (productId: string) => shortlist.some((p) => p.id === productId),
-    [shortlist]
+    [shortlist],
   );
 
   const toggleShortlist = useCallback((product: Product) => {
     setShortlist((prev) =>
       prev.some((p) => p.id === product.id)
         ? prev.filter((p) => p.id !== product.id)
-        : [...prev, product]
+        : [...prev, product],
     );
   }, []);
 
@@ -111,52 +135,64 @@ export function TradeDossierProvider({ children }: { children: ReactNode }) {
 
   const toggleCategoryPref = useCallback((cat: string) => {
     setSelectedCategories((prev) =>
-      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]
+      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat],
     );
   }, []);
 
   const buildWhatsAppUrl = useCallback(
-    (phone = '919876543210') => {
+    (phone = "919876543210") => {
       const modeLabel =
-        inquiryMode === 'showroom'
-          ? 'Private Showroom Appointment (Ahmedabad)'
-          : inquiryMode === 'catalog'
-            ? 'Wholesale Rate Sheet & Catalog Allocation'
-            : 'Custom Bridal / Temple Jewellery Commission';
+        inquiryMode === "showroom"
+          ? "Private Showroom Appointment (Ahmedabad)"
+          : inquiryMode === "catalog"
+            ? "Wholesale Rate Sheet & Catalog Allocation"
+            : "Custom Bridal / Temple Jewellery Commission";
 
       const purityLabel =
-        purityPref === 'both'
-          ? '92K & 84K Hallmarked Gold'
+        purityPref === "both"
+          ? "92K & 84K Hallmarked Gold"
           : `${purityPref} Carat Hallmarked Gold`;
 
       const lines: string[] = [
-        'Namaste Swaminarayan Ornaments Trade Desk,',
-        '',
+        "Namaste Swaminarayan Ornaments Trade Desk,",
+        "",
         `*Inquiry Type:* ${modeLabel}`,
         `*Purity Requirement:* ${purityLabel}`,
       ];
 
       if (businessName.trim() || city.trim()) {
         lines.push(
-          `*Retailer / Firm:* ${[businessName.trim(), city.trim()].filter(Boolean).join(' · ')}`
+          `*Retailer / Firm:* ${[businessName.trim(), city.trim()].filter(Boolean).join(" · ")}`,
         );
       }
 
       if (selectedCategories.length > 0) {
-        lines.push(`*Focus Categories:* ${selectedCategories.join(', ')}`);
+        lines.push(`*Focus Categories:* ${selectedCategories.join(", ")}`);
       }
 
       if (shortlist.length > 0) {
-        lines.push('', `*Shortlisted Pieces (${shortlist.length}):*`);
+        lines.push("", `*Shortlisted Pieces (${shortlist.length}):*`);
         shortlist.forEach((item, idx) => {
-          lines.push(`${idx + 1}. ${item.name} (${item.carat}K · ${item.category})`);
+          lines.push(
+            `${idx + 1}. ${item.name} (${item.carat}K · ${item.category})`,
+          );
         });
       }
 
-      lines.push('', 'Please share wholesale trade availability and next steps.');
-      return `https://wa.me/${phone}?text=${encodeURIComponent(lines.join('\n'))}`;
+      lines.push(
+        "",
+        "Please share wholesale trade availability and next steps.",
+      );
+      return `https://wa.me/${phone}?text=${encodeURIComponent(lines.join("\n"))}`;
     },
-    [inquiryMode, purityPref, businessName, city, selectedCategories, shortlist]
+    [
+      inquiryMode,
+      purityPref,
+      businessName,
+      city,
+      selectedCategories,
+      shortlist,
+    ],
   );
 
   return (
@@ -190,7 +226,9 @@ export function TradeDossierProvider({ children }: { children: ReactNode }) {
 export function useTradeDossier() {
   const ctx = useContext(TradeDossierContext);
   if (!ctx) {
-    throw new Error('useTradeDossier must be used within a TradeDossierProvider');
+    throw new Error(
+      "useTradeDossier must be used within a TradeDossierProvider",
+    );
   }
   return ctx;
 }
