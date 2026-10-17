@@ -137,6 +137,10 @@ export function getFallbackCatalog(): CatalogData {
 }
 
 export async function loadCatalog(): Promise<CatalogData> {
+  // Without a configured project there is nothing to fetch; skip the network.
+  if (!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
+    return getFallbackCatalog();
+  }
   if (firestoreAvailable === false) {
     return getFallbackCatalog();
   }

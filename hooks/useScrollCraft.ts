@@ -35,6 +35,9 @@ export function useScrollCraft(
 
     async function init() {
       if (typeof window === 'undefined') return;
+      // Under reduced motion the page is laid out statically in CSS, so there
+      // is nothing for the engine to drive.
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       if (!window.ScrollCraft) {
         await import('@/lib/scrollcraft.js');
       }
@@ -42,7 +45,7 @@ export function useScrollCraft(
 
       instanceRef.current?.destroy();
       const target = rootRef?.current ?? document;
-      const inst = window.ScrollCraft.mount(target, { lerp: 0.18 });
+      const inst = window.ScrollCraft.mount(target);
       instanceRef.current = inst;
 
       // Recalculate layout once images/fonts settle

@@ -1,17 +1,22 @@
-import type { Metadata } from "next";
-import "./globals.css"; // force reload
+import type { Metadata, Viewport } from "next";
+import "./globals.css";
+import { display, text } from "./fonts";
 
 export const metadata: Metadata = {
-  title: "Swaminarayan Ornaments | The Art of Adornment",
+  title: "Swaminarayan Ornaments | Jewellery, shown one piece at a time",
   description:
-    "Discover necklaces, bangles, earrings and more at Swaminarayan Ornaments. Explore the collection, save your favourites and enquire about wholesale availability.",
+    "Necklaces, bangles, earrings and more from Swaminarayan Ornaments. Browse the collection, save the pieces you like and enquire.",
   openGraph: {
-    title: "Swaminarayan Ornaments | The Art of Adornment",
+    title: "Swaminarayan Ornaments",
     description:
-      "Ornaments for today. Stories for a lifetime. Explore our jewellery collection.",
+      "Jewellery shown the way a jeweller shows it: one piece at a time, under good light.",
     type: "website",
   },
   icons: { icon: "/logo.jpg", apple: "/logo.jpg" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#06130F",
 };
 
 export default function RootLayout({
@@ -20,15 +25,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" data-scroll-behavior="smooth">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin=""
-        />
-      </head>
+    <html
+      lang="en"
+      className={`${display.variable} ${text.variable}`}
+      data-scroll-behavior="smooth"
+    >
       <body className="antialiased" suppressHydrationWarning>
         {children}
       </body>
