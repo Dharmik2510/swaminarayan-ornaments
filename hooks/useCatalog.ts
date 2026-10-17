@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { loadCatalog, type CatalogData } from '@/lib/catalog';
+import { getFallbackCatalog, loadCatalog, type CatalogData } from '@/lib/catalog';
 
 export function useCatalog() {
-  const [catalog, setCatalog] = useState<CatalogData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [catalog, setCatalog] = useState<CatalogData>(() => getFallbackCatalog());
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {

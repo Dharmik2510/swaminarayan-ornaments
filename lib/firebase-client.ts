@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { initializeFirestore, getFirestore, type Firestore } from "firebase/firestore";
+import { initializeFirestore, getFirestore, setLogLevel, type Firestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
@@ -15,6 +15,8 @@ const firebaseConfig = {
 
 let app: FirebaseApp;
 let db: Firestore;
+
+setLogLevel("silent");
 
 if (!getApps().length) {
   app = initializeApp(firebaseConfig);

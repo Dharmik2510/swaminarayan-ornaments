@@ -1,10 +1,12 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
+import { Check, Crosshair, Plus, ShieldCheck, Sparkles, X } from 'lucide-react';
 import type { Product } from '@/lib/data';
 import WhatsAppButton from './WhatsAppButton';
+import { useTradeDossier } from './store/TradeDossierContext';
 
 interface ProductDetailModalProps {
   product: Product | null;
@@ -12,27 +14,47 @@ interface ProductDetailModalProps {
   onClose: () => void;
 }
 
-export default function ProductDetailModal({ product, isOpen, onClose }: ProductDetailModalProps) {
+export default function ProductDetailModal({
+  product,
+  isOpen,
+  onClose,
+}: ProductDetailModalProps) {
   const pushedRef = useRef(false);
+  const imgBoxRef = useRef<HTMLDivElement>(null);
+  const [loupeActive, setLoupeActive] = useState(false);
+  const [loupePos, setLoupePos] = useState({ x: 50, y: 50 });
+
+  let dossier: ReturnType<typeof useTradeDossier> | null = null;
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    dossier = useTradeDossier();
+  } catch {
+    dossier = null;
+  }
 
   const stableOnClose = useCallback(onClose, [onClose]);
 
-  // Push a history entry when the modal opens so the back button closes it
   useEffect(() => {
     if (isOpen) {
       window.history.pushState({ modal: true }, '');
       pushedRef.current = true;
 
       const handlePopState = () => {
-        // Browser back was pressed — close the modal
         pushedRef.current = false;
         stableOnClose();
       };
 
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') stableOnClose();
+      };
+
       window.addEventListener('popstate', handlePopState);
-      return () => window.removeEventListener('popstate', handlePopState);
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        window.removeEventListener('popstate', handlePopState);
+        window.removeEventListener('keydown', handleKeyDown);
+      };
     } else if (pushedRef.current) {
-      // Modal closed via UI (not back button) — pop the extra history entry
       pushedRef.current = false;
       window.history.back();
     }
@@ -40,27 +62,16 @@ export default function ProductDetailModal({ product, isOpen, onClose }: Product
 
   if (!product) return null;
 
-  const gradients = [
-    'linear-gradient(135deg, #1a1400 0%, #2d2200 30%, #D4AF37 50%, #2d2200 70%, #1a1400 100%)',
-    'linear-gradient(135deg, #0d0d00 0%, #1a1500 30%, #B8860B 50%, #1a1500 70%, #0d0d00 100%)',
-    'linear-gradient(135deg, #1a1200 0%, #332600 30%, #FFD700 50%, #332600 70%, #1a1200 100%)',
-  ];
-
-  const getCategoryEmoji = (category: string) => {
-    const map: Record<string, string> = {
-      'Necklaces': '📿',
-      'Bangles': '⭕',
-      'Earrings': '💎',
-      'Rings': '💍',
-      'Chains': '🔗',
-      'Bracelets': '⌚',
-      'Pendants': '🔱',
-      'Mangalsutra': '📿',
-    };
-    return map[category] || '✨';
-  };
-
   const hasImage = product.images && product.images.length > 0;
+  const shortlisted = dossier ? dossier.isShortlisted(product.id) : false;
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!imgBoxRef.current) return;
+    const rect = imgBoxRef.current.getBoundingClientRect();
+    const x = Math.max(10, Math.min(90, ((e.clientX - rect.left) / rect.width) * 100));
+    const y = Math.max(10, Math.min(90, ((e.clientY - rect.top) / rect.height) * 100));
+    setLoupePos({ x, y });
+  };
 
   return (
     <AnimatePresence>
@@ -68,199 +79,182 @@ export default function ProductDetailModal({ product, isOpen, onClose }: Product
         <>
           {/* Backdrop */}
           <motion.div
-            className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-xl"
+            className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-xl"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
           />
 
-          {/* Modal */}
+          {/* Modal Dialog */}
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-label={product.name}
             className="fixed inset-0 z-[101] flex items-center justify-center p-4 md:p-8 pointer-events-none"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto pointer-events-auto rounded-xl"
-              style={{
-                background: '#0A0A0A',
-                border: '1px solid rgba(212, 175, 55, 0.15)',
-                boxShadow: '0 0 80px rgba(212, 175, 55, 0.08), 0 0 200px rgba(212, 175, 55, 0.03)',
-              }}
-              initial={{ scale: 0.8, y: 50, opacity: 0 }}
+              className="sc-vault-card relative w-full max-w-5xl max-h-[90vh] overflow-y-auto pointer-events-auto rounded-3xl bg-[#0b0709]"
+              initial={{ scale: 0.92, y: 30, opacity: 0 }}
               animate={{ scale: 1, y: 0, opacity: 1 }}
-              exit={{ scale: 0.9, y: 30, opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 200, damping: 25 }}
+              exit={{ scale: 0.95, y: 20, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 240, damping: 26 }}
             >
               {/* Close button */}
-              <motion.button
-                className="absolute top-4 right-4 z-20 w-10 h-10 flex items-center justify-center rounded-full"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                }}
+              <button
+                type="button"
                 onClick={onClose}
-                data-hoverable
-                whileHover={{ scale: 1.1, background: 'rgba(212, 175, 55, 0.1)' }}
-                whileTap={{ scale: 0.95 }}
+                aria-label="Close product specification modal"
+                className="absolute top-4 right-4 z-30 w-10 h-10 flex items-center justify-center rounded-full bg-black/60 border border-[var(--store-border)] text-[var(--store-muted)] hover:text-[var(--sc-ink)] hover:border-[var(--store-gold)] transition-colors"
               >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="rgba(245, 240, 232, 0.6)" strokeWidth="1.5">
-                  <line x1="2" y1="2" x2="14" y2="14" />
-                  <line x1="14" y1="2" x2="2" y2="14" />
-                </svg>
-              </motion.button>
+                <X size={18} />
+              </button>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
-                {/* Product Image Side */}
-                <div className="relative aspect-square md:aspect-auto overflow-hidden">
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-0">
+                {/* Product Image Side with Interactive 2.2x Loupe */}
+                <div
+                  ref={imgBoxRef}
+                  onPointerEnter={() => setLoupeActive(true)}
+                  onPointerLeave={() => setLoupeActive(false)}
+                  onPointerMove={handlePointerMove}
+                  className="md:col-span-6 relative aspect-square md:aspect-auto min-h-[360px] md:min-h-[500px] overflow-hidden bg-gradient-to-br from-[#1d1317] via-[#110b0d] to-[#080607] flex items-center justify-center select-none"
+                >
                   <div
-                    className="w-full h-full min-h-[400px] relative"
+                    className="pointer-events-none absolute inset-0"
                     style={{
-                      background: gradients[parseInt(product.id.replace(/[^0-9]/g, '')) % 3],
+                      background:
+                        'radial-gradient(circle at 50% 48%, rgba(212,175,55,0.22) 0%, transparent 68%)',
                     }}
-                  >
-                    {hasImage ? (
-                      <Image
-                        src={product.images[0]}
-                        alt={product.name}
-                        fill
-                        sizes="(max-width: 768px) 100vw, 50vw"
-                        className="object-cover"
-                      />
-                    ) : (
-                      <>
-                        {/* Rotating light reflection */}
-                        <motion.div
-                          className="absolute inset-0"
-                          style={{
-                            background: 'conic-gradient(from 0deg at 50% 50%, transparent, rgba(255, 215, 0, 0.12), transparent, transparent)',
-                          }}
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
-                        />
-                        {/* Product emoji */}
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <motion.span
-                            className="text-8xl md:text-9xl"
-                            style={{ filter: 'drop-shadow(0 0 40px rgba(212, 175, 55, 0.4))' }}
-                            animate={{
-                              rotateY: [0, 360],
-                              scale: [1, 1.05, 1],
-                            }}
-                            transition={{
-                              rotateY: { duration: 15, repeat: Infinity, ease: 'linear' },
-                              scale: { duration: 3, repeat: Infinity, ease: 'easeInOut' },
-                            }}
-                          >
-                            {getCategoryEmoji(product.category)}
-                          </motion.span>
-                        </div>
-                      </>
-                    )}
+                  />
 
-                    {/* Carat badge */}
-                    <div className="absolute bottom-4 left-4 z-10">
-                      <motion.div
-                        className="px-4 py-2 glass-gold rounded-full"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3 }}
-                      >
-                        <span className="text-gold text-sm font-semibold" style={{ fontFamily: 'var(--font-body)' }}>
-                          {product.carat} Carat Gold
-                        </span>
-                      </motion.div>
+                  {hasImage ? (
+                    <Image
+                      src={product.images[0]}
+                      alt={product.name}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      className="object-contain p-8 md:p-12 drop-shadow-[0_28px_46px_rgba(0,0,0,0.88)]"
+                    />
+                  ) : (
+                    <div className="font-display text-7xl text-[var(--store-gold)]/30">
+                      {product.name.charAt(0)}
                     </div>
+                  )}
+
+                  {/* Interactive 2.2x Loupe */}
+                  {hasImage && loupeActive && (
+                    <div
+                      className="pointer-events-none hidden md:block absolute z-20 w-44 h-44 rounded-full border-2 border-[var(--store-gold)] shadow-2xl overflow-hidden bg-[#130d0f]"
+                      style={{
+                        left: `${loupePos.x}%`,
+                        top: `${loupePos.y}%`,
+                        transform: 'translate(-50%, -50%)',
+                      }}
+                    >
+                      <div
+                        className="relative w-full h-full"
+                        style={{
+                          transform: 'scale(2.25)',
+                          transformOrigin: `${loupePos.x}% ${loupePos.y}%`,
+                        }}
+                      >
+                        <Image
+                          src={product.images[0]}
+                          alt=""
+                          fill
+                          sizes="400px"
+                          className="object-contain p-4"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Top & Bottom Badges */}
+                  <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
+                    <span className="px-3 py-1 rounded-full bg-black/70 backdrop-blur-md border border-[var(--store-gold)]/35 text-[10px] font-mono uppercase tracking-widest text-[var(--store-gold)]">
+                      {product.carat}K HALLMARKED
+                    </span>
                   </div>
+
+                  {hasImage && (
+                    <div className="hidden md:inline-flex items-center gap-1.5 absolute bottom-4 left-4 z-10 px-3 py-1 rounded-full bg-black/65 text-[10px] font-mono text-[var(--store-muted)] border border-[var(--store-border)]">
+                      <Crosshair size={11} className="text-[var(--store-gold)]" />
+                      Hover to inspect detail (2.2×)
+                    </div>
+                  )}
                 </div>
 
                 {/* Product Details Side */}
-                <div className="p-8 md:p-12 flex flex-col justify-center">
-                  {/* Category */}
-                  <motion.p
-                    className="text-xs tracking-[0.3em] uppercase text-gold/60 mb-3"
-                    style={{ fontFamily: 'var(--font-body)' }}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                  >
-                    {product.category}
-                  </motion.p>
+                <div className="md:col-span-6 p-7 sm:p-10 md:p-12 flex flex-col justify-center">
+                  <div className="flex items-center gap-2 text-[10px] font-mono tracking-[0.22em] uppercase text-[var(--store-gold)] mb-2">
+                    <Sparkles size={12} />
+                    <span>{product.category}</span>
+                    <span>·</span>
+                    <span>LOT #{product.id.toUpperCase()}</span>
+                  </div>
 
-                  {/* Product name */}
-                  <motion.h2
-                    className="text-3xl md:text-4xl font-bold mb-4 gold-gradient-text"
-                    style={{ fontFamily: 'var(--font-display)' }}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                  >
+                  <h2 className="font-display text-3xl sm:text-4xl text-[var(--sc-ink)] mb-4">
                     {product.name}
-                  </motion.h2>
+                  </h2>
 
-                  {/* Decorative line */}
-                  <motion.div
-                    className="h-[1px] mb-6"
-                    style={{ background: 'linear-gradient(90deg, #D4AF37, transparent)' }}
-                    initial={{ width: 0 }}
-                    animate={{ width: '60%' }}
-                    transition={{ delay: 0.3, duration: 0.8 }}
-                  />
+                  <div className="h-px w-24 bg-gradient-to-r from-[var(--store-gold)] to-transparent mb-6" />
 
-                  {/* Description */}
-                  <motion.p
-                    className="text-text-secondary mb-8 leading-relaxed"
-                    style={{
-                      fontFamily: 'var(--font-accent)',
-                      fontSize: '1rem',
-                      lineHeight: 1.8,
-                      fontWeight: 300,
-                    }}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
-                  >
+                  <p className="text-sm sm:text-base text-[var(--store-muted)] leading-relaxed mb-6">
                     {product.description}
-                  </motion.p>
+                  </p>
 
-                  {/* Details grid */}
-                  <motion.div
-                    className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 }}
-                  >
-                    <div className="p-4 rounded-lg" style={{ background: 'rgba(212, 175, 55, 0.05)', border: '1px solid rgba(212, 175, 55, 0.1)' }}>
-                      <p className="text-[10px] tracking-[0.2em] uppercase text-gold/50 mb-1" style={{ fontFamily: 'var(--font-body)' }}>Purity</p>
-                      <p className="text-lg font-semibold text-gold" style={{ fontFamily: 'var(--font-display)' }}>{product.carat} Carat</p>
+                  {/* Metallurgical Spec Grid */}
+                  <div className="grid grid-cols-2 gap-3.5 mb-7">
+                    <div className="rounded-xl p-3.5 bg-white/[0.03] border border-[var(--store-border)]">
+                      <p className="sc-label text-[9px] text-[var(--store-muted)]">Melt Purity</p>
+                      <p className="font-display text-xl text-[var(--store-gold-soft)] mt-0.5">
+                        {product.carat} Carat ({product.carat === 92 ? '92.0%' : '84.0%'} Au)
+                      </p>
                     </div>
-                  </motion.div>
+                    <div className="rounded-xl p-3.5 bg-white/[0.03] border border-[var(--store-border)]">
+                      <p className="sc-label text-[9px] text-[var(--store-muted)]">Assay Status</p>
+                      <p className="font-display text-xl text-[var(--sc-ink)] mt-0.5 flex items-center gap-1.5">
+                        <ShieldCheck size={16} className="text-[var(--store-gold)]" />
+                        XRF Verified
+                      </p>
+                    </div>
+                  </div>
 
-                  {/* Action buttons */}
-                  <motion.div
-                    className="flex flex-col sm:flex-row gap-3"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6 }}
-                  >
+                  {product.tags?.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mb-8">
+                      {product.tags.map((t) => (
+                        <span
+                          key={t}
+                          className="px-2.5 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider bg-white/[0.04] border border-[var(--store-border)] text-[var(--store-muted)]"
+                        >
+                          #{t}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  <div className="flex flex-wrap items-center gap-3">
                     <WhatsAppButton product={product} />
-                    
-                    <button
-                      data-hoverable
-                      className="px-6 py-3 text-sm tracking-[0.2em] uppercase transition-all duration-500"
-                      style={{
-                        fontFamily: 'var(--font-body)',
-                        fontWeight: 400,
-                        border: '1px solid rgba(245, 240, 232, 0.15)',
-                        color: 'rgba(245, 240, 232, 0.6)',
-                      }}
-                      onClick={onClose}
-                    >
-                      Continue Browsing
-                    </button>
-                  </motion.div>
+
+                    {dossier && (
+                      <button
+                        type="button"
+                        onClick={() => dossier.toggleShortlist(product)}
+                        className={`px-5 py-3 rounded-sm text-xs font-mono uppercase tracking-wider inline-flex items-center gap-2 transition-all ${
+                          shortlisted
+                            ? 'bg-[var(--store-gold)] text-[#080607] font-semibold'
+                            : 'border border-[var(--store-gold)]/35 text-[var(--store-gold-soft)] hover:bg-[var(--store-gold)]/15'
+                        }`}
+                      >
+                        {shortlisted ? <Check size={14} /> : <Plus size={14} />}
+                        {shortlisted ? 'Shortlisted in Dossier' : 'Add to Trade Dossier'}
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </motion.div>

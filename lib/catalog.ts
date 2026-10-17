@@ -21,8 +21,6 @@ export interface CatalogData {
   categoriesWithStats: CategoryWithStats[];
 }
 
-const FIRESTORE_TIMEOUT_MS = 5000;
-
 export function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return Promise.race([
     promise,
@@ -117,7 +115,32 @@ export function sortProducts(
   }
 }
 
+const FIRESTORE_TIMEOUT_MS = 1800;
+let firestoreAvailable: boolean | null = null;
+
+export function getFallbackCatalog(): CatalogData {
+  const products: Product[] = mockProducts;
+  const categories: CategoryItem[] = defaultCategories;
+  const active = activeProducts(products);
+  const categoryNames = categories.map((c) => c.name);
+  const productOnlyNames = active
+    .map((p) => p.category)
+    .filter((name) => !categoryNames.includes(name));
+  const mergedNames = [...categoryNames, ...productOnlyNames];
+
+  return {
+    products: active,
+    categories,
+    categoryFilters: buildCategoryFilters(mergedNames),
+    categoriesWithStats: buildCategoriesWithStats(categories, products),
+  };
+}
+
 export async function loadCatalog(): Promise<CatalogData> {
+  if (firestoreAvailable === false) {
+    return getFallbackCatalog();
+  }
+
   let products: Product[] = mockProducts;
   let categories: CategoryItem[] = defaultCategories;
 
@@ -127,10 +150,12 @@ export async function loadCatalog(): Promise<CatalogData> {
       Promise.all([getCategories(), getProducts()]),
       FIRESTORE_TIMEOUT_MS
     );
+    firestoreAvailable = true;
     if (cats.length > 0) categories = cats;
     if (prods.length > 0) products = prods;
   } catch {
-    // fall back to mock data
+    firestoreAvailable = false;
+    return getFallbackCatalog();
   }
 
   const active = activeProducts(products);

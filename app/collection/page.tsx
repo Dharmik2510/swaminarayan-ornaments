@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef, Suspense } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
@@ -10,12 +10,13 @@ import {
   ChevronDown,
   LayoutGrid,
   Grid3X3,
+  Sparkles,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import StoreLayout from '@/components/store/StoreLayout';
 import CategoryNav from '@/components/store/CategoryNav';
 import ProductTile from '@/components/store/ProductTile';
-import ScrollReveal from '@/components/store/ScrollReveal';
+import ConciergeSearch from '@/components/ConciergeSearch';
 import { useCatalog } from '@/hooks/useCatalog';
 import {
   ALL_CATEGORY,
@@ -59,11 +60,12 @@ function CollectionContent() {
   const [selectedCarat, setSelectedCarat] = useState<'all' | 92 | 84>(caratFromUrl);
   const [sortBy, setSortBy] = useState<SortOption>('default');
   const [searchQuery, setSearchQuery] = useState('');
+  const [aiMatchIds, setAiMatchIds] = useState<string[] | null>(null);
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [mobileCatsOpen, setMobileCatsOpen] = useState(false);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
-  const [gridCols, setGridCols] = useState<3 | 4>(4);
+  const [gridCols, setGridCols] = useState<3 | 4>(3);
   const sortRef = useRef<HTMLDivElement>(null);
   const loaderRef = useRef<HTMLDivElement>(null);
 
@@ -111,7 +113,7 @@ function CollectionContent() {
 
   useEffect(() => {
     setVisibleCount(ITEMS_PER_PAGE);
-  }, [selectedCategory, selectedCarat, sortBy, searchQuery]);
+  }, [selectedCategory, selectedCarat, sortBy, searchQuery, aiMatchIds]);
 
   useEffect(() => {
     document.body.style.overflow = selectedProduct ? 'hidden' : '';
@@ -129,52 +131,87 @@ function CollectionContent() {
   }, [products]);
 
   const filteredProducts = useMemo(() => {
-    const filtered = filterProducts(products, {
+    let filtered = filterProducts(products, {
       category: selectedCategory,
       carat: selectedCarat,
       search: searchQuery,
     });
+    if (aiMatchIds !== null) {
+      if (aiMatchIds.length === 0) return [];
+      const set = new Set(aiMatchIds);
+      filtered = filtered.filter((p) => set.has(p.id));
+    }
     return sortProducts(filtered, sortBy);
-  }, [products, selectedCategory, selectedCarat, searchQuery, sortBy]);
+  }, [products, selectedCategory, selectedCarat, searchQuery, sortBy, aiMatchIds]);
 
   const visibleProducts = filteredProducts.slice(0, visibleCount);
   const hasMore = visibleCount < filteredProducts.length;
+
+  const handleConciergeResults = useCallback((matchIds: string[] | null) => {
+    setAiMatchIds(matchIds);
+  }, []);
 
   const clearFilters = () => {
     setSelectedCategory(ALL_CATEGORY);
     setSelectedCarat('all');
     setSearchQuery('');
+    setAiMatchIds(null);
     setSortBy('default');
   };
 
   return (
-    <StoreLayout categories={categoriesWithStats}>
-      <div className="pt-16 md:pt-[4.25rem] min-h-screen">
-        <div className="border-b border-[var(--store-border)] bg-[var(--store-surface)]/40">
-          <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-8 md:py-12">
+    <StoreLayout
+      categories={categoriesWithStats}
+      scrollDeps={[loading, visibleProducts.length, selectedCategory, selectedCarat]}
+    >
+      <div className="pt-16 md:pt-[4.5rem] min-h-screen">
+        {/* Vault Header Banner */}
+        <div
+          data-sc-spotlight
+          className="relative border-b border-[var(--store-border)] bg-gradient-to-b from-[#170e12] via-[#100b0d] to-[var(--sc-canvas)] overflow-hidden"
+        >
+          <div className="store-hero-glow absolute inset-0 pointer-events-none" />
+          <div className="sc-wrap relative z-10 py-10 md:py-14">
             <Link
               href="/"
-              className="inline-flex items-center gap-2 text-xs text-[var(--store-muted)] hover:text-[var(--store-gold)] mb-6"
+              className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-[var(--store-muted)] hover:text-[var(--store-gold)] mb-6"
             >
-              <ArrowLeft size={16} />
-              Home
+              <ArrowLeft size={15} />
+              Return to Sovereign Experience
             </Link>
-            <ScrollReveal>
-              <h1 className="font-display text-3xl md:text-5xl text-[var(--store-text)]">
-                {selectedCategory !== ALL_CATEGORY ? (
-                  <span className="text-[var(--store-gold-soft)]">{selectedCategory}</span>
-                ) : (
-                  'Wholesale catalog'
-                )}
-              </h1>
-              <p className="mt-3 text-[var(--store-muted)] max-w-xl text-sm md:text-base">
-                {filteredProducts.length} pieces · filter by category, purity, or search
-              </p>
-            </ScrollReveal>
+
+            <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[var(--store-gold)]/25 bg-[var(--store-gold)]/[0.07] mb-3">
+                  <Sparkles size={11} className="text-[var(--store-gold)]" />
+                  <span className="sc-label text-[10px] text-[var(--store-gold)]">
+                    Hallmarked 92K &amp; 84K Trade Archive
+                  </span>
+                </div>
+                <h1 className="sc-display sc-display--lg text-[var(--sc-ink)]">
+                  {selectedCategory !== ALL_CATEGORY ? (
+                    <span className="text-[var(--store-gold-soft)]">{selectedCategory}</span>
+                  ) : (
+                    'Wholesale Vault Catalog'
+                  )}
+                </h1>
+                <p className="mt-3 text-[var(--store-muted)] max-w-xl text-sm md:text-base">
+                  {filteredProducts.length} certified trade lots available · filter by department,
+                  melt purity, or ask our AI Trade Concierge.
+                </p>
+              </div>
+
+              <div className="w-full lg:max-w-md sc-vault-card rounded-2xl p-4">
+                <p className="sc-label text-[9px] text-[var(--store-gold)] mb-2 text-center">
+                  AI Trade Concierge Search
+                </p>
+                <ConciergeSearch products={products} onResults={handleConciergeResults} />
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-6">
+        <div className="sc-wrap py-8">
           <div className="flex flex-wrap items-center gap-3 mb-6 lg:hidden">
             <button
               type="button"
@@ -182,7 +219,7 @@ function CollectionContent() {
               className="store-btn-ghost py-2.5 px-4 flex items-center gap-2"
             >
               <SlidersHorizontal size={14} />
-              Categories
+              Departments ({categoriesWithStats.length})
             </button>
             <input
               type="search"
@@ -193,9 +230,9 @@ function CollectionContent() {
             />
           </div>
 
-          <div className="flex gap-8 lg:gap-12">
-            <aside className="hidden lg:block w-56 xl:w-64 shrink-0">
-              <div className="sticky top-24 max-h-[calc(100vh-7rem)]">
+          <div className="flex gap-8 lg:gap-10">
+            <aside className="hidden lg:block w-60 xl:w-64 shrink-0">
+              <div className="sticky top-24 max-h-[calc(100vh-7rem)] sc-vault-card rounded-2xl p-4">
                 <CategoryNav
                   categories={categoriesWithStats}
                   categoryFilters={categoryFilters}
@@ -213,8 +250,8 @@ function CollectionContent() {
                   type="search"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search pieces..."
-                  className="store-input max-w-sm flex-1 min-w-[200px]"
+                  placeholder="Filter by name, tag, or motif..."
+                  className="store-input max-w-xs flex-1 min-w-[200px]"
                 />
                 <div className="flex gap-2">
                   {(['all', 92, 84] as const).map((c) => (
@@ -222,13 +259,13 @@ function CollectionContent() {
                       key={c}
                       type="button"
                       onClick={() => setSelectedCarat(c)}
-                      className={`px-4 py-2 rounded-full text-xs border transition-colors ${
+                      className={`px-4 py-2 rounded-full text-xs font-mono uppercase tracking-wider border transition-colors ${
                         selectedCarat === c
-                          ? 'border-[var(--store-gold-dim)] text-[var(--store-gold)] bg-[var(--store-gold)]/10'
-                          : 'border-[var(--store-border)] text-[var(--store-muted)]'
+                          ? 'border-[var(--store-gold)] text-[#080607] bg-[var(--store-gold)] font-semibold'
+                          : 'border-[var(--store-border)] text-[var(--store-muted)] hover:text-[var(--sc-ink)]'
                       }`}
                     >
-                      {c === 'all' ? 'All carats' : `${c}K`}
+                      {c === 'all' ? 'All Carats' : `${c}K Gold`}
                     </button>
                   ))}
                 </div>
@@ -236,7 +273,7 @@ function CollectionContent() {
                   <button
                     type="button"
                     onClick={() => setShowSortDropdown((o) => !o)}
-                    className="store-btn-ghost py-2.5 px-4 flex items-center gap-2"
+                    className="store-btn-ghost py-2.5 px-4 flex items-center gap-2 text-[10px]"
                   >
                     {sortLabels[sortBy]}
                     <ChevronDown size={14} />
@@ -298,19 +335,19 @@ function CollectionContent() {
                     key={c}
                     type="button"
                     onClick={() => setSelectedCarat(c)}
-                    className={`shrink-0 px-4 py-2 rounded-full text-xs border ${
+                    className={`shrink-0 px-4 py-2 rounded-full text-xs font-mono uppercase border ${
                       selectedCarat === c
-                        ? 'border-[var(--store-gold-dim)] text-[var(--store-gold)]'
+                        ? 'border-[var(--store-gold)] bg-[var(--store-gold)] text-[#080607] font-semibold'
                         : 'border-[var(--store-border)] text-[var(--store-muted)]'
                     }`}
                   >
-                    {c === 'all' ? 'All' : `${c}K`}
+                    {c === 'all' ? 'All Purities' : `${c}K Gold`}
                   </button>
                 ))}
               </div>
 
               {loading ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
                   {Array.from({ length: 6 }).map((_, i) => (
                     <div
                       key={i}
@@ -319,24 +356,24 @@ function CollectionContent() {
                   ))}
                 </div>
               ) : filteredProducts.length === 0 ? (
-                <div className="text-center py-24">
-                  <p className="font-display text-xl text-[var(--store-text)] mb-2">
-                    No pieces found
+                <div className="sc-vault-card rounded-3xl text-center py-20 px-6">
+                  <p className="font-display text-2xl text-[var(--store-text)] mb-2">
+                    No trade pieces match that filter
                   </p>
                   <p className="text-sm text-[var(--store-muted)] mb-8">
-                    Try another category or clear filters
+                    Try another jewellery department, purity setting, or clear active filters.
                   </p>
                   <button type="button" onClick={clearFilters} className="store-btn-primary">
-                    Clear filters
+                    Reset All Filters
                   </button>
                 </div>
               ) : (
                 <>
                   <div
-                    className={`grid gap-4 md:gap-5 ${
+                    className={`grid gap-5 ${
                       gridCols === 3
-                        ? 'grid-cols-2 md:grid-cols-2 xl:grid-cols-3'
-                        : 'grid-cols-2 md:grid-cols-3 xl:grid-cols-4'
+                        ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3'
+                        : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4'
                     }`}
                   >
                     {visibleProducts.map((product, index) => (
@@ -354,8 +391,8 @@ function CollectionContent() {
                     </div>
                   )}
                   {!hasMore && (
-                    <p className="text-center text-xs text-[var(--store-muted)] py-12">
-                      Showing all {filteredProducts.length} pieces
+                    <p className="text-center font-mono text-xs uppercase tracking-widest text-[var(--store-muted)] py-12">
+                      Showing all {filteredProducts.length} certified pieces
                     </p>
                   )}
                 </>
@@ -363,7 +400,6 @@ function CollectionContent() {
             </div>
           </div>
         </div>
-
       </div>
 
       <AnimatePresence>
